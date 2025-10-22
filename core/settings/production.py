@@ -19,49 +19,44 @@ DATABASES = {
 # Redis Configuration
 REDIS_URL = config('REDIS_URL')
 
-# Redis SSL options for Heroku
-REDIS_SSL_OPTIONS = {
-    "ssl_cert_reqs": ssl.CERT_NONE,
-    "ssl_check_hostname": False,
-}
-
-# Caches with proper SSL
+# TEMPORARY: Use dummy cache to bypass Redis SSL issues
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": REDIS_URL,
-        "OPTIONS": REDIS_SSL_OPTIONS,
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
     }
 }
 
-# Channel Layers with proper SSL
+# Channel Layers - parse Redis URL properly for SSL
+import urllib.parse
+redis_url = urllib.parse.urlparse(REDIS_URL)
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [{
-                "address": REDIS_URL,
-                **REDIS_SSL_OPTIONS,
-            }],
+            "hosts": [(redis_url.hostname, redis_url.port)],
+            "ssl": True,
+            "ssl_cert_reqs": None,
         },
     },
 }
 
-# Celery with SSL
+# Celery
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
-CELERY_BROKER_USE_SSL = REDIS_SSL_OPTIONS
-CELERY_REDIS_BACKEND_USE_SSL = REDIS_SSL_OPTIONS
+CELERY_BROKER_USE_SSL = {'ssl_cert_reqs': ssl.CERT_NONE}
+CELERY_REDIS_BACKEND_USE_SSL = {'ssl_cert_reqs': ssl.CERT_NONE}
 
 # Static files
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATIC_URL = '/static/'
 
-# WhiteNoise for static files
+# WhiteNoise
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Security settings
+# Security
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
