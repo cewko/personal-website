@@ -6,6 +6,7 @@ import redis.asyncio as redis
 from decouple import config
 from discord.ext import commands
 from apps.hangout.models import Message
+from apps.hangout.redis_utils import get_async_redis_client  # Added missing import
 
 
 class HangoutDiscord:
@@ -23,10 +24,7 @@ class HangoutDiscord:
             print("missing Discord bot token or channel ID")
             return False
             
-        self.redis_client = redis.from_url(
-            config("REDIS_URL", default="redis://localhost:6379"),
-            decode_responses=True
-        )
+        self.redis_client = get_async_redis_client()
         
         intents = discord.Intents.default()
         intents.message_content = True

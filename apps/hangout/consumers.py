@@ -8,6 +8,7 @@ from django.utils import timezone
 from decouple import config
 from .models import Message
 from .online_tracker import OnlineUserTracker
+from .redis_utils import get_async_redis_client
 
 
 class HangoutConsumer(AsyncWebsocketConsumer):
@@ -37,10 +38,7 @@ class HangoutConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
 
-        self.redis_client = redis.from_url(
-            config("REDIS_URL", default="redis://localhost:6379"),
-            decode_responses=True
-        )
+        self.redis_client = get_async_redis_client()
         
         ip = self.scope.get('client', ['unknown'])[0] if self.scope.get('client') else 'unknown'
         
