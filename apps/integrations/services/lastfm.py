@@ -5,7 +5,7 @@ from .base import BaseIntegrationService
 
 
 class LastFmService(BaseIntegrationService):
-    cache_timeout = 5
+    cache_timeout = 60
 
     def __init__(self):
         self.api_key = config("LASTFM_API_KEY", default="")

@@ -8,7 +8,7 @@ from .base import BaseIntegrationService
 
 
 class MastodonService(BaseIntegrationService):
-    cache_timeout = 3600
+    cache_timeout = 1800
 
     def __init__(self):
         self.instance = config("MASTODON_INSTANCE", default="")

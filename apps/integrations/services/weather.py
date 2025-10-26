@@ -3,7 +3,7 @@ from .base import BaseIntegrationService
 
 
 class WeatherService(BaseIntegrationService):
-    cache_timeout = 21600  # 6 hours
+    cache_timeout = 10800
 
     def __init__(self):
         # Warsaw coordinates

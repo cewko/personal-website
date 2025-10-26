@@ -5,7 +5,7 @@ from .base import BaseIntegrationService
 
 
 class GithubService(BaseIntegrationService):
-    cache_timeout = 21600
+    cache_timeout = 7200
 
     def __init__(self):
         self.username = config("GITHUB_USERNAME", default="")
