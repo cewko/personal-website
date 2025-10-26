@@ -18,14 +18,16 @@ DATABASES = {
 # Redis Configuration
 REDIS_URL = config('REDIS_URL')
 
-# Cache Configuration with SSL support
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": REDIS_URL,
         "OPTIONS": {
-            "ssl_cert_reqs": None,
-        } if REDIS_URL.startswith('rediss://') else {},
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "ssl_cert_reqs": None
+            },
+        }
     }
 }
 
