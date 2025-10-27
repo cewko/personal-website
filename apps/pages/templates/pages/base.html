@@ -6,10 +6,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}cewko{% endblock %}</title>
+    <title>{% block title %}cewko's home{% endblock %}</title>
+
+    <link rel="icon" type="image/x-icon" href="{% static 'pages/images/favicon.ico' %}">
 
     <link rel="stylesheet" href="{% static 'pages/css/base.css' %}" />
-
+    
     {% block extra_css %}{% endblock %}
   </head>
   <body>
