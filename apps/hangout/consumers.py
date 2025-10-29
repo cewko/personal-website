@@ -30,6 +30,21 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             ] if nicknames else []
         )
 
+    def _get_real_client_ip(self):
+        headers = dict(self.scope.get('headers', []))
+        
+        # Get X-Forwarded-For header
+        x_forwarded_for = headers.get(b'x-forwarded-for', b'').decode('utf-8')
+        
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0].strip()
+            return ip
+        
+        if self.scope.get('client'):
+            return self.scope['client'][0]
+        
+        return 'unknown'
+
     async def connect(self):
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -40,7 +55,8 @@ class HangoutConsumer(AsyncWebsocketConsumer):
 
         self.redis_client = get_async_redis_client()
         
-        ip = self.scope.get('client', ['unknown'])[0] if self.scope.get('client') else 'unknown'
+        # get real client IP (not heroku's internal router ip)
+        ip = self._get_real_client_ip()
         
         session = self.scope.get('session', {})
         session_key = None
@@ -56,6 +72,8 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             session_key = hashlib.md5(f"{ip}:{user_agent}".encode()).hexdigest()[:16]
         
         self.user_id = f"{ip}:{session_key}"
+        
+        print(f"[Hangout] User connected: {self.user_id}")
         
         await self.online_tracker.mark_user_online(self.user_id, self.redis_client)
         
@@ -94,6 +112,8 @@ class HangoutConsumer(AsyncWebsocketConsumer):
         }))
 
     async def disconnect(self, close_code):
+        print(f"[Hangout] User disconnected: {self.user_id}")
+        
         if self.redis_listener_task:
             self.redis_listener_task.cancel()
             try:
@@ -168,9 +188,8 @@ class HangoutConsumer(AsyncWebsocketConsumer):
                     }))
                     return
 
-                ip_address = None
-                if self.scope.get("client"):
-                    ip_address = self.scope["client"][0]
+                # Get real IP for message logging
+                ip_address = self._get_real_client_ip()
 
                 message = await self.save_message(
                     nickname=nickname,
