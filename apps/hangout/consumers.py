@@ -21,6 +21,7 @@ class HangoutConsumer(AsyncWebsocketConsumer):
         self.highlight_user_id = config("DISCORD_USER_ID", default="")
         self.online_tracker = OnlineUserTracker()
         self.user_id = None
+        self.last_message_time = {}
 
         self.banned_words = config(
             "BANNED_NICKNAMES",
@@ -144,11 +145,24 @@ class HangoutConsumer(AsyncWebsocketConsumer):
                 if not content:
                     return
 
+                # cooldown
+                current_time = timezone.now().timestamp()
+                last_time = self.last_message_time.get(self.user_id, 0)
+
+                if current_time - last_time < 1:
+                    await self.send(text_data=json.dumps({
+                        "type": "error",
+                        "message": "You're typing too fast, slow down."
+                    }))
+                    return
+
+                self.last_message_time[self.user_id] = current_time
+
                 max_length = 280
                 if len(content) > max_length:
                     await self.send(text_data=json.dumps({
                         "type": "error",
-                        "message": f"message too long (max {max_length} characters)"
+                        "message": f"Message too long (max {max_length} characters)"
                     }))
                     return
 
@@ -157,7 +171,7 @@ class HangoutConsumer(AsyncWebsocketConsumer):
                 if any(banned_word in name_lower for banned_word in self.banned_words):
                     await self.send(text_data=json.dumps({
                         "type": "error",
-                        "message": "this nickname is not allowed"
+                        "message": "This nickname is not allowed."
                     }))
                     return
 
@@ -188,13 +202,13 @@ class HangoutConsumer(AsyncWebsocketConsumer):
         except json.JSONDecodeError:
             await self.send(text_data=json.dumps({
                 "type": "error",
-                "message": "invalid message format"
+                "message": "Invalid message format."
             }))
         except Exception as error:
             print(f"Error in receive: {error}")
             await self.send(text_data=json.dumps({
                 "type": "error",
-                "message": "an error occurred"
+                "message": "An error occurred."
             }))
 
     async def message_handler(self, event):

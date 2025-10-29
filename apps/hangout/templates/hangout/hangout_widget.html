@@ -6,6 +6,8 @@
 </div>
 <div class="widget-bar"></div>
 
+<div class="chat-errors" id="chat-errors" style="display: none; margin-bottom: -6px; margin-top: -8px;"></div>
+
 <div class="chat-messages" id="chat-messages"></div>
 
 <div class="chat-input-container">
@@ -90,6 +92,7 @@
     const nicknameInput = document.getElementById("nickname-input");
     const sendButton = document.getElementById("send-button");
     const onlineCountElement = document.querySelector(".online-count");
+    const errorsContainer = document.getElementById("chat-errors");
 
     let isInitialLoad = true;
 
@@ -164,9 +167,31 @@
     }
 
     function showError(message) {
-      console.error("Hangout error:", message);
-      // Optionally show a subtle in-widget notification instead of alert
-      // For now, just log to console
+      const existingErrors = Array.from(errorsContainer.children);
+      const existingError = existingErrors.find(err => err.textContent === message);
+
+      if (existingError) {
+        return;
+      }
+
+      errorsContainer.innerHTML = "";
+
+      const errorDiv = document.createElement("div");
+      errorDiv.className = "chat-error-message";
+      errorDiv.textContent = message;
+      errorDiv.style.fontSize = "16px";
+      errorDiv.style.color = "var(--color-secondary)";
+
+      errorsContainer.style.display = "block";
+      errorsContainer.appendChild(errorDiv);
+
+      setTimeout(() => {
+        errorDiv.remove();
+
+        if (errorsContainer.children.length === 0) {
+          errorsContainer.style.display = "none";
+        }
+      }, 3000);
     }
 
     ws.onmessage = (e) => {
