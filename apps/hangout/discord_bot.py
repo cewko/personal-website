@@ -2,11 +2,10 @@ import asyncio
 import re
 import json
 import discord
-import redis.asyncio as redis
 from decouple import config
 from discord.ext import commands
 from apps.hangout.models import Message
-from apps.hangout.redis_utils import get_async_redis_client  # Added missing import
+from apps.hangout.redis_manager import get_async_redis_client
 
 
 class HangoutDiscord:
@@ -16,6 +15,7 @@ class HangoutDiscord:
         self.highlight_user_id = config("DISCORD_USER_ID", default="")
         self.bot = None
         self.redis_client = None
+        self.redis_pubsub = None
         self.redis_listener_task = None
         self.room_group_name = "hangout_main"
         
@@ -23,7 +23,7 @@ class HangoutDiscord:
         if not self.token or not self.channel_id:
             print("missing Discord bot token or channel ID")
             return False
-            
+        
         self.redis_client = get_async_redis_client()
         
         intents = discord.Intents.default()
@@ -93,12 +93,12 @@ class HangoutDiscord:
     
     async def listen_for_web_messages(self):
         try:
-            pubsub = self.redis_client.pubsub()
-            await pubsub.subscribe("web_to_discord")
+            self.redis_pubsub = self.redis_client.pubsub()
+            await self.redis_pubsub.subscribe("web_to_discord")
             
             print("Listening for web messages...")
             
-            async for message in pubsub.listen():
+            async for message in self.redis_pubsub.listen():
                 if message["type"] == "message":
                     try:
                         data = json.loads(message["data"])
@@ -180,8 +180,14 @@ class HangoutDiscord:
             except asyncio.CancelledError:
                 pass
         
-        if self.redis_client:
-            await self.redis_client.close()
+        if self.redis_pubsub:
+            try:
+                await self.redis_pubsub.unsubscribe("web_to_discord")
+                await self.redis_pubsub.close()
+            except Exception as e:
+                print(f"Error closing pubsub: {e}")
+        
+        self.redis_client = None
         
         if self.bot:
             await self.bot.close()

@@ -46,22 +46,24 @@ CHANNEL_LAYERS = {
     },
 }
 
-# Celery Configuration with SSL support
-CELERY_BROKER_URL = REDIS_URL
-CELERY_RESULT_BACKEND = REDIS_URL
-CELERY_BROKER_USE_SSL = {'ssl_cert_reqs': ssl.CERT_NONE} if REDIS_URL.startswith('rediss://') else None
-CELERY_REDIS_BACKEND_USE_SSL = {'ssl_cert_reqs': ssl.CERT_NONE} if REDIS_URL.startswith('rediss://') else None
+# Celery Configuration
+CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = config("REDIS_URL", default="redis://localhost:6379/0")
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "UTC"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_RESULT_EXPIRES = 3600
 
-# Additional Celery settings for stability
+# Connection pool settings for Celery
+CELERY_BROKER_POOL_LIMIT = 3    # limit broker connections
 CELERY_BROKER_CONNECTION_RETRY = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BROKER_CONNECTION_MAX_RETRIES = 10
-CELERY_REDIS_SOCKET_CONNECT_TIMEOUT = 30
-CELERY_REDIS_SOCKET_TIMEOUT = 30
-CELERY_BROKER_POOL_LIMIT = None
-CELERY_BROKER_CONNECTION_TIMEOUT = 30
-CELERY_RESULT_BACKEND_CONNECTION_RETRY = True
-CELERY_RESULT_BACKEND_CONNECTION_MAX_RETRIES = 10
+CELERY_REDIS_MAX_CONNECTIONS = 3    # limit Redis connections
+
 
 # Static files
 STATIC_ROOT = BASE_DIR / 'staticfiles'

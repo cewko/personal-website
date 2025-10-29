@@ -1,14 +1,13 @@
 import json
 import asyncio
 import hashlib
-import redis.asyncio as redis
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
 from decouple import config
 from .models import Message
 from .online_tracker import OnlineUserTracker
-from .redis_utils import get_async_redis_client
+from .redis_manager import get_async_redis_client
 
 
 class HangoutConsumer(AsyncWebsocketConsumer):
@@ -16,6 +15,7 @@ class HangoutConsumer(AsyncWebsocketConsumer):
         super().__init__(*args, **kwargs)
         self.room_group_name = "hangout_main"
         self.redis_client = None
+        self.redis_pubsub = None
         self.redis_listener_task = None
         self.heartbeat_task = None
         self.highlight_user_id = config("DISCORD_USER_ID", default="")
@@ -93,7 +93,7 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             "message": "connected to hangout"
         }))
 
-    async def disconnect(self, close_code):     
+    async def disconnect(self, close_code):
         if self.redis_listener_task:
             self.redis_listener_task.cancel()
             try:
@@ -108,6 +108,13 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             except asyncio.CancelledError:
                 pass
         
+        if self.redis_pubsub:
+            try:
+                await self.redis_pubsub.unsubscribe("discord_to_web")
+                await self.redis_pubsub.close()
+            except Exception as e:
+                print(f"Error closing pubsub: {e}")
+        
         if self.user_id and self.redis_client:
             await self.online_tracker.mark_user_offline(self.user_id, self.redis_client)
             
@@ -121,8 +128,7 @@ class HangoutConsumer(AsyncWebsocketConsumer):
                 }
             )
         
-        if self.redis_client:
-            await self.redis_client.close()
+        self.redis_client = None
 
         await self.channel_layer.group_discard(
             self.room_group_name,
@@ -228,10 +234,10 @@ class HangoutConsumer(AsyncWebsocketConsumer):
 
     async def listen_for_discord_messages(self):
         try:
-            pubsub = self.redis_client.pubsub()
-            await pubsub.subscribe("discord_to_web")
+            self.redis_pubsub = self.redis_client.pubsub()
+            await self.redis_pubsub.subscribe("discord_to_web")
             
-            async for message in pubsub.listen():
+            async for message in self.redis_pubsub.listen():
                 if message['type'] == 'message':
                     try:
                         data = json.loads(message['data'])

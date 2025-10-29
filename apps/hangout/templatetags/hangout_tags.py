@@ -1,7 +1,6 @@
 from django import template
-import redis
 from decouple import config
-from ..redis_utils import get_sync_redis_client
+from ..redis_manager import get_sync_redis_client
 
 register = template.Library()
 
@@ -11,7 +10,6 @@ def hangout_widget():
     try:
         redis_client = get_sync_redis_client()
         online_count = redis_client.scard("online_users")
-        redis_client.close()
     except Exception as e:
         print(f"Redis error: {e}")
         online_count = 0
