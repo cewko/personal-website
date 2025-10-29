@@ -119,20 +119,8 @@ class HangoutConsumer(AsyncWebsocketConsumer):
                 await self.redis_pubsub.close()
             except Exception as e:
                 print(f"Error closing pubsub: {e}")
-        
-        if self.user_id and self.redis_client:
-            await self.online_tracker.mark_user_offline(self.user_id, self.redis_client)
-            
-            online_count = await self.online_tracker.get_online_count(self.redis_client)
-            
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "online_count_update",
-                    "count": online_count
-                }
-            )
-        
+
+        # let ttl handle disconnection
         self.redis_client = None
 
         await self.channel_layer.group_discard(
