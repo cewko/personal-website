@@ -1,6 +1,9 @@
+from datetime import timedelta
+from django.utils import timezone
 from celery import shared_task
 from .redis_manager import get_sync_redis_client
 import logging
+from .models import Message
 
 
 logger = logging.getLogger(__name__)
@@ -27,4 +30,17 @@ def cleanup_stale_online_users():
         
     except Exception as error:
         logger.error(f"Error cleaning stale users: {error}")
+        return {"error": str(error)}
+
+
+@shared_task
+def cleanup_old_messages():
+    try:
+        cutoff_date = timezone.now() - timedelta(days=30)
+        deleted_count, _ = Message.objects.filter(timestamp__lt=cutoff_date).delete()
+        logger.info(f"Deleted {deleted_count} old messages")
+
+        return {"deleted": deleted_count}
+    except Exception as error:
+        logger.error(f"Error cleaning up old messages: {error}")
         return {"error": str(error)}
