@@ -130,4 +130,8 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.integrations.tasks.refresh_github_contributions",
         "schedule": 7020.0,  # 1h 57min (cache: 2 hours)
     },
+    "cleanup-stale-online-users": {
+        "task": "apps.hangout.tasks.cleanup_stale_online_users",
+        "schedule": 120.0,
+    },
 }
