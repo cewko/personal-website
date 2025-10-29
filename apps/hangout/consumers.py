@@ -56,22 +56,7 @@ class HangoutConsumer(AsyncWebsocketConsumer):
         self.redis_client = get_async_redis_client()
         
         # get real client IP (not heroku's internal router ip)
-        ip = self._get_real_client_ip()
-        
-        session = self.scope.get('session', {})
-        session_key = None
-        
-        if hasattr(session, 'session_key'):
-            session_key = session.session_key
-        elif hasattr(session, '_session_key'):
-            session_key = session._session_key
-        
-        if not session_key:
-            headers = dict(self.scope.get('headers', []))
-            user_agent = headers.get(b'user-agent', b'unknown').decode('utf-8', errors='ignore')[:50]
-            session_key = hashlib.md5(f"{ip}:{user_agent}".encode()).hexdigest()[:16]
-        
-        self.user_id = f"{ip}:{session_key}"
+        self.user_id = self._get_real_client_ip()
         
         print(f"[Hangout] User connected: {self.user_id}")
         
