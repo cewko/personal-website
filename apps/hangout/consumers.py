@@ -38,7 +38,9 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             r'wget', r'curl', r'python', r'java',
             r'http', r'lighthouse', r'pingdom', r'uptime',
             r'statuspage', r'newrelic', r'datadog',
-            r'nagios', r'zabbix', r'prometheus'
+            r'nagios', r'zabbix', r'prometheus',
+            r'headless', r'phantom', r'selenium',
+            r'go-http', r'okhttp', r'apache'
         ]
 
     def _get_real_client_ip(self):
@@ -66,6 +68,9 @@ class HangoutConsumer(AsyncWebsocketConsumer):
         
         # no user agent = likely a bot
         if not user_agent or len(user_agent) < 10:
+            return True
+
+        if not user_agent.startswith('mozilla/'):
             return True
         
         # check for bot patterns in user agent
