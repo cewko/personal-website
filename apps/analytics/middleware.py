@@ -1,3 +1,4 @@
+import re
 from django.core.cache import cache
 from .models import Visit
 
@@ -5,15 +6,27 @@ from .models import Visit
 class AnalyticsMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
+        
+        self.bot_user_agent_patterns = [
+            r'bot', r'crawl', r'spider', r'scrape', 
+            r'monitor', r'check', r'scan', r'test',
+            r'wget', r'curl', r'python', r'java',
+            r'http', r'lighthouse', r'pingdom', r'uptime',
+            r'statuspage', r'newrelic', r'datadog',
+            r'nagios', r'zabbix', r'prometheus',
+            r'headless', r'phantom', r'selenium',
+            r'go-http', r'okhttp', r'apache'
+        ]
     
     def __call__(self, request):
         if not request.path.startswith(("/admin/", "/static/", "/media/", "/ws/")):
             ip = self._get_client_ip(request)
             
-            cache_key = f"visit_{ip}"
-            if not cache.get(cache_key):
-                Visit.objects.create(ip_address=ip)
-                cache.set(cache_key, True, 300)
+            if not self._is_bot(request):
+                cache_key = f"visit_{ip}"
+                if not cache.get(cache_key):
+                    Visit.objects.create(ip_address=ip)
+                    cache.set(cache_key, True, 300)
         
         return self.get_response(request)
     
@@ -24,3 +37,18 @@ class AnalyticsMiddleware:
         else:
             ip = request.META.get("REMOTE_ADDR", "127.0.0.1")
         return ip
+    
+    def _is_bot(self, request):
+        user_agent = request.META.get('HTTP_USER_AGENT', '').lower()
+        
+        if not user_agent or len(user_agent) < 10:
+            return True
+        
+        if not user_agent.startswith('mozilla/'):
+            return True
+        
+        for pattern in self.bot_user_agent_patterns:
+            if re.search(pattern, user_agent):
+                return True
+        
+        return False
