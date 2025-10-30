@@ -9,10 +9,12 @@
     <title>{% block title %}cewko's home{% endblock %}</title>
 
     <link rel="icon" type="image/x-icon" href="{% static 'pages/images/favicon.ico' %}">
-
     <link rel="stylesheet" href="{% static 'pages/css/base.css' %}" />
+    <link rel="stylesheet" href="{% static 'pages/css/preloader.css' %}" />
     
     {% block extra_css %}{% endblock %}
+
+    <script src="{% static 'pages/js/preloader.js' %}"></script>
   </head>
   <body>
     <div class="main-container">
