@@ -1,4 +1,5 @@
 import re
+import ipaddress
 from django.core.cache import cache
 from .models import Visit
 
@@ -17,18 +18,31 @@ class AnalyticsMiddleware:
             r'headless', r'phantom', r'selenium',
             r'go-http', r'okhttp', r'apache'
         ]
+
+        self.blocked_networks = [
+            # cloudflare health check IPs
+            ipaddress.ip_network("2a06:98c0:3600::/48"),
+        ]
     
     def __call__(self, request):
         if not request.path.startswith(("/admin/", "/static/", "/media/", "/ws/")):
             ip = self._get_client_ip(request)
             
-            if not self._is_bot(request):
+            if not self._is_blocked_ip(ip) and not self._is_bot(request):
                 cache_key = f"visit_{ip}"
                 if not cache.get(cache_key):
                     Visit.objects.create(ip_address=ip)
                     cache.set(cache_key, True, 300)
         
         return self.get_response(request)
+
+    def _is_blocked_ip(self, ip):
+        try:
+            ip_obj = ipaddress.ip_address(ip)
+            return any(ip_obj in network for network in self.blocked_networks)
+        except ValueError:
+            # invalid IP address format
+            return False
     
     def _get_client_ip(self, request):
         x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
