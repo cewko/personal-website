@@ -1,4 +1,5 @@
 import json
+import re
 import asyncio
 import hashlib
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -31,6 +32,15 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             ] if nicknames else []
         )
 
+        self.bot_user_agent_patterns = [
+            r'bot', r'crawl', r'spider', r'scrape', 
+            r'monitor', r'check', r'scan', r'test',
+            r'wget', r'curl', r'python', r'java',
+            r'http', r'lighthouse', r'pingdom', r'uptime',
+            r'statuspage', r'newrelic', r'datadog',
+            r'nagios', r'zabbix', r'prometheus'
+        ]
+
     def _get_real_client_ip(self):
         headers = dict(self.scope.get('headers', []))
         
@@ -46,7 +56,40 @@ class HangoutConsumer(AsyncWebsocketConsumer):
         
         return 'unknown'
 
+    def _get_user_agent(self):
+        headers = dict(self.scope.get("headers", []))
+        user_agent = headers.get(b'user-agent', b'').decode("utf-8", errors="ignore")
+        return user_agent.lower()
+
+    def _is_bot(self):
+        user_agent = self._get_user_agent()
+        
+        # no user agent = likely a bot
+        if not user_agent or len(user_agent) < 10:
+            return True
+        
+        # check for bot patterns in user agent
+        for pattern in self.bot_user_agent_patterns:
+            if re.search(pattern, user_agent):
+                return True
+        
+        return False
+
+    def _should_count_as_online(self):
+        return not self._is_bot()
+
     async def connect(self):
+        # get real client IP (not heroku's internal router ip)
+        self.user_id = self._get_real_client_ip()
+        user_agent = self._get_user_agent()
+
+        is_bot = self._is_bot()
+
+        if is_bot:
+            print(f"[Hangout] Bot detected: {self.user_id} | UA: {user_agent[:100]}")
+        else:
+            print(f"[Hangout] Human connected: {self.user_id}")
+
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
@@ -55,16 +98,14 @@ class HangoutConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
         self.redis_client = get_async_redis_client()
-        
-        # get real client IP (not heroku's internal router ip)
-        self.user_id = self._get_real_client_ip()
-        
-        print(f"[Hangout] User connected: {self.user_id}")
-        
-        await self.online_tracker.mark_user_online(self.user_id, self.redis_client)
+
+        if not is_bot:
+            await self.online_tracker.mark_user_online(self.user_id, self.redis_client)
         
         self.redis_listener_task = asyncio.create_task(self.listen_for_discord_messages())
-        self.heartbeat_task = asyncio.create_task(self.online_heartbeat())
+
+        if not is_bot:
+            self.heartbeat_task = asyncio.create_task(self.online_heartbeat())
 
         recent_messages = await self.get_recent_messages()
         for message in recent_messages:
@@ -135,7 +176,8 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             message_type = data.get("type", "message")
 
             if message_type == "heartbeat":
-                await self.online_tracker.heartbeat(self.user_id, self.redis_client)
+                if self._should_count_as_online():
+                    await self.online_tracker.heartbeat(self.user_id, self.redis_client)
                 return
 
             if message_type == "message":
