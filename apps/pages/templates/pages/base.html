@@ -30,7 +30,7 @@
             <div class="widget-links">
               <div class="link-row">
                 <a href="{% url 'pages:home' %}" class="widget-link" target="_blank">Home</a>
-                {% if current_page == "home" %}<span class="page-status">[open]</span>{% endif %}
+                {% if current_page == "home" %}<span class="page-status">[~]</span>{% endif %}
               </div>
               <div class="link-row">
                 <a href="{% url 'pages:about' %}" class="widget-link">About me</a>
@@ -38,7 +38,7 @@
 
               <div class="link-row">
                 <a href="{% url 'weblog:article_inventory' %}" class="widget-link">WebLog</a>
-                {% if current_page == "weblog" %}<span class="page-status">[open]</span>{% endif %}
+                {% if current_page == "weblog" %}<span class="page-status">[~]</span>{% endif %}
               </div>
             </div>
           </div>
