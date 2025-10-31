@@ -8,7 +8,7 @@
             </div>
         </a>
         <div class="blog-post-meta">┗ {{ article.published_at|date:"F j, Y" }} | 
-            {{ article.get_word_count }} word{{ article.get_reading_time|pluralize }} | 
+            {{ article.get_word_count }} word{{ article.get_word_count|pluralize }} | 
             {{ article.get_reading_time }} minute{{ article.get_reading_time|pluralize }}</div>
     {% endfor %}
 </div>

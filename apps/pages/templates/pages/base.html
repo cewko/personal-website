@@ -86,7 +86,41 @@
     </div>
     {% endblock %} 
 
-    <script src="{% static 'pages/js/checkCreditsCollision.js' %}"></script>
+    <script>
+    function checkCreditsCollision() {
+      const credits = document.querySelector(".credits");
+      const mainContainer = document.querySelector(".main-container");
+
+      if (!credits || !mainContainer) return;
+
+      const creditsRect = credits.getBoundingClientRect();
+      const containerRect = mainContainer.getBoundingClientRect();
+
+      const isColliding = !(
+        creditsRect.right < containerRect.left ||
+        creditsRect.left > containerRect.right ||
+        creditsRect.bottom < containerRect.top ||
+        creditsRect.top > containerRect.bottom
+      );
+
+      if (isColliding) {
+        credits.style.setProperty('opacity', '0', 'important');
+        credits.style.pointerEvents = "none";
+      } else {
+        credits.style.setProperty('opacity', '1', 'important');
+        credits.style.pointerEvents = "auto";
+      }
+    }
+
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        checkCreditsCollision();
+      }, 800);
+    });
+
+    window.addEventListener("resize", checkCreditsCollision);
+    window.addEventListener("scroll", checkCreditsCollision);
+    </script>
 
     {% block extra_js %}
     
