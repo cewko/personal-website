@@ -1,5 +1,6 @@
 {% extends "pages/base.html" %}
 {% load static %}
+{% load cache %}
 {% load integration_tags %}
 {% load analytics_tags %}
 {% load weblog_tags %}
@@ -229,6 +230,7 @@
 
 {% block left_column %}
 <!-- Profile Widget -->
+{% cache 1800 profile_widget %}
 <div class="profile-widget">
   <div class="profile-content">
     <div class="header-section">
@@ -281,8 +283,10 @@
     <div class="widget-title">C3VK0-X9N4D-Q8GKV</div>
   </div>
 </div>
+{% endcache %}
 
 <!-- About Widget -->
+{% cache 3600 about_widget %}
 <div class="widget about-widget">
   <div class="widget-container">
     <div class="widget-title">
@@ -298,6 +302,7 @@
     </div>
   </div>
 </div>
+{% endcache %}
 
 <!-- Recent Widgets Row -->
 <div class="recent-widgets-row">
@@ -347,6 +352,8 @@
 {% block bottom_grid %}
 <div class="bottom-grid">
     <div class="left-bottom-column">
+        {% cache 1800 github_widget %}
+        <!-- Contributions Widget -->
         <div class="widget">
             <div class="widget-container">
                 <div class="widget-drag-handle">
@@ -360,6 +367,7 @@
                 {% github_widget %}
             </div>
         </div>
+        {% endcache %}
         <!-- Hangout Widget -->
         <div class="widget">
             <div class="widget-container">
@@ -368,6 +376,7 @@
         </div>
     </div>
     <div class="right-bottom-column">
+        {% cache 300 weblog_widget %}
         <!-- Weblog Widget -->
         <div class="widget">
             <div class="widget-container">
@@ -389,7 +398,9 @@
                 {% recent_articles_widget limit=3 %}
             </div>
         </div>
+        {% endcache %}
         
+        {% cache 3600 craft_widget %}
         <!-- Craft Widget -->
         <div class="widget">
             <div class="widget-container">
@@ -443,6 +454,7 @@
                 </div>
             </div>
         </div>
+        {% endcache %}
         
         <!-- Stats Row: WakaTime + Visitors -->
         <div class="stats-row">

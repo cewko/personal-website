@@ -3,29 +3,26 @@ import ipaddress
 from django.core.cache import cache
 from .models import Visit
 
-
 class AnalyticsMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
         
-        self.bot_user_agent_patterns = [
-            r'bot', r'crawl', r'spider', r'scrape', 
-            r'monitor', r'check', r'scan', r'test',
-            r'wget', r'curl', r'python', r'java',
-            r'http', r'lighthouse', r'pingdom', r'uptime',
-            r'statuspage', r'newrelic', r'datadog',
-            r'nagios', r'zabbix', r'prometheus',
-            r'headless', r'phantom', r'selenium',
-            r'go-http', r'okhttp', r'apache'
-        ]
-
+        self.bot_pattern = re.compile(
+            r'bot|crawl|spider|scrape|monitor|check|scan|test|'
+            r'wget|curl|python|java|http|lighthouse|pingdom|uptime|'
+            r'statuspage|newrelic|datadog|nagios|zabbix|prometheus|'
+            r'headless|phantom|selenium|go-http|okhttp|apache',
+            re.IGNORECASE
+        )
+        
+        self.excluded_paths = frozenset(['/admin/', '/static/', '/media/', '/ws/'])
+        
         self.blocked_networks = [
-            # cloudflare health check IPs
             ipaddress.ip_network("2a06:98c0:3600::/48"),
         ]
     
     def __call__(self, request):
-        if not request.path.startswith(("/admin/", "/static/", "/media/", "/ws/")):
+        if not any(request.path.startswith(p) for p in self.excluded_paths):
             ip = self._get_client_ip(request)
             
             if not self._is_blocked_ip(ip) and not self._is_bot(request):
@@ -35,13 +32,12 @@ class AnalyticsMiddleware:
                     cache.set(cache_key, True, 300)
         
         return self.get_response(request)
-
+    
     def _is_blocked_ip(self, ip):
         try:
             ip_obj = ipaddress.ip_address(ip)
             return any(ip_obj in network for network in self.blocked_networks)
         except ValueError:
-            # invalid IP address format
             return False
     
     def _get_client_ip(self, request):
@@ -61,8 +57,7 @@ class AnalyticsMiddleware:
         if not user_agent.startswith('mozilla/'):
             return True
         
-        for pattern in self.bot_user_agent_patterns:
-            if re.search(pattern, user_agent):
-                return True
+        if self.bot_pattern.search(user_agent):
+            return True
         
         return False

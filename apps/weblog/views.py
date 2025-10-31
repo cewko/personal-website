@@ -15,7 +15,10 @@ def article_inventory(request):
 
 
 def article_page(request, slug):
-    article = get_object_or_404(Article.published, slug=slug)
+    article = get_object_or_404(
+        Article.published.prefetch_related("comments"), 
+        slug=slug
+    )
     comments = article.comments.all()
 
     if request.method == "POST":

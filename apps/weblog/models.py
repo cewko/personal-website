@@ -43,6 +43,7 @@ class Article(models.Model):
             models.Index(fields=["-published_at"]),
             models.Index(fields=["slug"]),
             models.Index(fields=["status"]),
+            models.Index(fields=["status", "-published_at"]),
         ]
     
     def __str__(self):

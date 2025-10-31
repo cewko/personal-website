@@ -32,16 +32,13 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             ] if nicknames else []
         )
 
-        self.bot_user_agent_patterns = [
-            r'bot', r'crawl', r'spider', r'scrape', 
-            r'monitor', r'check', r'scan', r'test',
-            r'wget', r'curl', r'python', r'java',
-            r'http', r'lighthouse', r'pingdom', r'uptime',
-            r'statuspage', r'newrelic', r'datadog',
-            r'nagios', r'zabbix', r'prometheus',
-            r'headless', r'phantom', r'selenium',
-            r'go-http', r'okhttp', r'apache'
-        ]
+        self.bot_pattern = re.compile(
+            r'bot|crawl|spider|scrape|monitor|check|scan|test|'
+            r'wget|curl|python|java|http|lighthouse|pingdom|uptime|'
+            r'statuspage|newrelic|datadog|nagios|zabbix|prometheus|'
+            r'headless|phantom|selenium|go-http|okhttp|apache',
+            re.IGNORECASE
+        )
 
     def _get_real_client_ip(self):
         headers = dict(self.scope.get('headers', []))
@@ -74,9 +71,8 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             return True
         
         # check for bot patterns in user agent
-        for pattern in self.bot_user_agent_patterns:
-            if re.search(pattern, user_agent):
-                return True
+        if self.bot_pattern.search(user_agent):
+            return True
         
         return False
 
