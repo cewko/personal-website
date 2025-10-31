@@ -135,20 +135,23 @@ body::before {
   gap: 0.9375rem;
 }
 
+.page-status {
+  font-family: "Ari-W9500 Display", monospace;
+  font-size: 20px;
+  color: var(--color-secondary);
+  text-decoration: none;
+}
+
 .widget-link {
   font-family: "Ari-W9500 Display", monospace;
-  font-size: 1.25rem;
+  font-size: 20px;
   color: var(--color-primary);
-  text-decoration: none;
   cursor: pointer;
-  text-underline-offset: 0.4125rem;
-  text-decoration-color: var(--color-secondary);
-  text-decoration-thickness: 1px;
+  text-decoration: none;
 }
 
 .widget-link:before {
-  content: "* ";
-  text-decoration: none;
+  content: "";
 }
 
 .widget-link:hover {
@@ -175,6 +178,7 @@ body::before {
   font-size: 1.25rem;
   color: var(--color-secondary);
   text-decoration: none;
+  margin-top: -2px;
 }
 
 /* credits */

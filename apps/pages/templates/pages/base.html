@@ -28,9 +28,18 @@
             <div class="widget-title">NAVIGATION</div>
             <div class="widget-bar"></div>
             <div class="widget-links">
-              <a href="{% url 'pages:home' %}" class="widget-link">Home</a>
-              <a href="{% url 'pages:about' %}" class="widget-link">About me</a>
-              <a href="{% url 'weblog:article_inventory' %}" class="widget-link">WebLog</a>
+              <div class="link-row">
+                <a href="{% url 'pages:home' %}" class="widget-link" target="_blank">Home</a>
+                {% if current_page == "home" %}<span class="page-status">[open]</span>{% endif %}
+              </div>
+              <div class="link-row">
+                <a href="{% url 'pages:about' %}" class="widget-link">About me</a>
+              </div>
+
+              <div class="link-row">
+                <a href="{% url 'weblog:article_inventory' %}" class="widget-link">WebLog</a>
+                {% if current_page == "article-inventory" %}<span class="page-status">[open]</span>{% endif %}
+              </div>
             </div>
           </div>
         </div>
@@ -40,16 +49,16 @@
             <div class="widget-title">CONTACT</div>
             <div class="widget-bar"></div>
             <div class="widget-links">
-              <a href="https://github.com/cewko" class="widget-link" target="_blank">GitHub</a>
+              <a href="https://t.me/cevvko" class="widget-link" target="_blank">Telegram</a>
               <a href="https://soundcloud.com/cewko" class="widget-link" target="_blank">Soundcloud</a>
               <div class="link-row">
                 <a href="https://discord.gg/dJCBj4StmQ" class="widget-link" target="_blank">Discord</a>
                 {% discord_status_widget %}
               </div>
-              <a href="https://mas.to/@cewko" class="widget-link" target="_blank">Mastodon</a>
-              <a href="https://t.me/cevvko" class="widget-link" target="_blank">Telegram</a>
-              <a href="https://steamcommunity.com/id/cewko/" class="widget-link" target="_blank">Steam</a>
-              <a href="https://ko-fi.com/cewko" class="widget-link" target="_blank">Donations</a>
+              <a href="https://github.com/cewko" class="widget-link" target="_blank">Grimoire</a>
+              <a href="https://mas.to/@cewko" class="widget-link" target="_blank">Fediverse</a>
+              <a href="https://twitter.com/cevvko" class="widget-link" target="_blank">X.com</a>
+              <a href="https://ko-fi.com/cewko" class="widget-link" target="_blank">Support</a>
             </div>
           </div>
         </div>

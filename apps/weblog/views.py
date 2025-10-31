@@ -8,7 +8,8 @@ def article_inventory(request):
     articles = Article.published.all()
     return render(
         request, "weblog/article_inventory.html", {
-            "articles": articles
+            "articles": articles,
+            "current_page": "article-inventory"
         }
     )
 
