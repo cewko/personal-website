@@ -1,7 +1,7 @@
 {% if articles %}
 <div class="weblog-content">
     {% for article in articles %}
-        <a href="{% url 'weblog:article_page' article.slug %}" class="blog-post-link" target="_blank">
+        <a href="{% url 'weblog:article_page' article.slug %}" class="blog-post-link">
             <div class="blog-post-title">
                 <span class="blog-title-char">: : </span>
                 <span class="blog-title-text">{{ article.title }}</span>

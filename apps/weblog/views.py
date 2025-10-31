@@ -9,7 +9,7 @@ def article_inventory(request):
     return render(
         request, "weblog/article_inventory.html", {
             "articles": articles,
-            "current_page": "article-inventory"
+            "current_page": "weblog"
         }
     )
 
@@ -35,5 +35,6 @@ def article_page(request, slug):
 
     return render(request, "weblog/article_page.html", {
         "article": article,
-        "comments": comments
+        "comments": comments,
+        "current_page": "weblog"
     })
