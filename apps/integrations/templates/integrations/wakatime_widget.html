@@ -1,10 +1,62 @@
 <div class="wakatime-stats">
     <div class="stat-column">
-        <div class="stat-label">all-time (aug. 2025)</div>
-        <div class="stat-value">: {{ stats.total_hours }} hours {{ stats.total_minutes }} minutes</div>
+        <div class="stat-label">all-time (aug. `25)</div>
+        <div class="stat-value">
+            : <span class="wakatime-number" data-hours="{{ stats.total_hours }}" data-minutes="{{ stats.total_minutes }}"></span>
+        </div>
     </div>
     <div class="stat-column">
         <div class="stat-label">average session</div>
-        <div class="stat-value">: {{ stats.daily_hours }} hours {{ stats.daily_minutes }} minutes</div>
+        <div class="stat-value">
+            : <span class="wakatime-number" data-hours="{{ stats.daily_hours }}" data-minutes="{{ stats.daily_minutes }}"></span>
+        </div>
     </div>
 </div>
+<script>
+(function () {
+    function formatAndColorWakatime() {
+        const wakatimeNumbers = document.querySelectorAll(".wakatime-number");
+        
+        wakatimeNumbers.forEach((element) => {
+            const hours = parseInt(element.getAttribute("data-hours")) || 0;
+            const minutes = parseInt(element.getAttribute("data-minutes")) || 0;
+            
+            const paddedHours = hours.toString().padStart(4, "0");
+            
+            let html = "";
+            let numberStarted = false;
+            
+            const digit = paddedHours[0];
+            if (!numberStarted && digit !== "0") {
+                numberStarted = true;
+            }
+            const colorClass = numberStarted ? "non-zero" : "";
+            html += `<span class="wakatime-digit ${colorClass}">${digit}</span>`;
+            
+            html += '<span class="wakatime-dot">.</span>';
+            
+            for (let i = 1; i < 4; i++) {
+                const digit = paddedHours[i];
+                if (!numberStarted && digit !== "0") {
+                    numberStarted = true;
+                }
+                const colorClass = numberStarted ? "non-zero" : "";
+                html += `<span class="wakatime-digit ${colorClass}">${digit}</span>`;
+            }
+            
+            html += ' <span class="wakatime-unit">hour </span>';
+            
+            const paddedMinutes = minutes.toString().padStart(2, "0");
+            for (let digit of paddedMinutes) {
+                html += `<span class="wakatime-digit non-zero">${digit}</span>`;
+            }
+            
+            html += ' <span class="wakatime-unit">min</span>';
+            
+            element.innerHTML = html;
+        });
+    }
+    
+    formatAndColorWakatime();
+})();
+</script>

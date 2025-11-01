@@ -10,7 +10,7 @@ function updateTime() {
 
   const timeElement = document.querySelector(".weather-stats div:first-child");
   if (timeElement) {
-    timeElement.textContent = `: Time: ${polandTime}`;
+    timeElement.textContent = `Time: ${polandTime}`;
   }
 }
 

@@ -81,7 +81,7 @@ class Article(models.Model):
         word_count = self.get_word_count()
         reading_time = math.ceil(word_count / words_per_minute)
 
-        return max(reading_time, 1)
+        return max(reading_time, 2)
 
 
 class Comment(models.Model):

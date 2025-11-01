@@ -7,11 +7,10 @@
                 <span class="blog-title-text">{{ article.title }}</span>
             </div>
         </a>
-        <div class="blog-post-meta">┗ {{ article.published_at|date:"F j, Y" }} | 
-            {% with reading_time=article.get_reading_time word_count=article.get_word_count %}
-                <span>{{ word_count }} words</span> |
-                <span>{{ reading_time }} minute{{ reading_time|pluralize }}</span>
-            {% endwith %}
+        <div class="blog-post-meta">[ {{ article.published_at|date:"F j. Y" }} | 
+            {% with reading_time=article.get_reading_time %}
+                <span>{{ reading_time }} mins</span>
+            {% endwith %} ]
         </div>
     {% endfor %}
 </div>

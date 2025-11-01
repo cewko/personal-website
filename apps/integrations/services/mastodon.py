@@ -75,22 +75,22 @@ class MastodonService(BaseIntegrationService):
                 for media_type, count in media_counts.items():
                     if count == 1:
                         if media_type == 'image':
-                            media_parts.append('[image]')
+                            media_parts.append('[ image ]')
                         elif media_type == 'video':
-                            media_parts.append('[video]')
+                            media_parts.append('[ video ]')
                         elif media_type == 'gifv':
-                            media_parts.append('[gif]')
+                            media_parts.append('[ gif ]')
                         elif media_type == 'audio':
-                            media_parts.append('[audio]')
+                            media_parts.append('[ audio ]')
                     else:
                         if media_type == 'image':
-                            media_parts.append(f'[{count} images]')
+                            media_parts.append(f'[ {count} images ]')
                         elif media_type == 'video':
-                            media_parts.append(f'[{count} videos]')
+                            media_parts.append(f'[ {count} videos ]')
                         elif media_type == 'gifv':
-                            media_parts.append(f'[{count} gifs]')
+                            media_parts.append(f'[ {count} gifs ]')
                         elif media_type == 'audio':
-                            media_parts.append(f'[{count} audios]')
+                            media_parts.append(f'[ {count} audios ]')
                 
                 if media_parts:
                     content = content + ' ' + ' '.join(media_parts)

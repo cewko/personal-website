@@ -29,11 +29,11 @@
 
         <div class="widget">
           <div class="widget-container">
-            <div class="widget-title">NAVIGATION</div>
+            <div class="widget-title">NAVBAR</div>
             <div class="widget-bar"></div>
             <div class="widget-links">
               <div class="link-row">
-                <a href="{% url 'pages:home' %}" class="widget-link" target="_blank">Home</a>
+                <a href="{% url 'pages:home' %}" class="widget-link">Home</a>
                 {% if current_page == "home" %}<span class="page-status">[~]</span>{% endif %}
               </div>
               <div class="link-row">
@@ -75,9 +75,6 @@
 
     {% block credits %}
     <div class="credits">
-      <div class="credits-row">
-        <span class="credits-label">milk-chan by demiiurge</span>
-      </div>
       <div class="credits-row">
         <span class="credits-label">background by</span>
         <a
