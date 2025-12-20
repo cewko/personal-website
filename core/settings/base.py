@@ -106,10 +106,10 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_RESULT_EXPIRES = 3600
 
 CELERY_BEAT_SCHEDULE = {
-    "refresh-discord-status": {
-        "task": "apps.integrations.tasks.refresh_discord_status",
-        "schedule": 240.0,  # 4 minutes (cache: 5 min)
-    },
+    # "refresh-discord-status": {
+    #     "task": "apps.integrations.tasks.refresh_discord_status",
+    #     "schedule": 240.0,  # 4 minutes (cache: 5 min)
+    # },
     "refresh-lastfm-track": {
         "task": "apps.integrations.tasks.refresh_lastfm_track",
         "schedule": 50.0,  # 50 seconds (cache: 1 min)
