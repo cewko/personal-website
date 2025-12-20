@@ -237,7 +237,6 @@
 
 {% block left_column %}
 <!-- Profile Widget -->
-{% cache 1800 profile_widget %}
 <div class="profile-widget">
   <div class="profile-content">
     <div class="header-section">
@@ -264,18 +263,18 @@
               <div class="info-value">Україна</div>
             </div>
             <div class="info-row">
-              <div class="info-label">PRS. *</div>
-              <div class="info-value">he/him</div>
+              <div class="info-label">JOB. *</div>
+              <div class="info-value">Open for work</div>
             </div>
             <div class="info-row">
-              <div class="info-label">JOB. *</div>
-              <div class="info-value">open for work</div>
+              <div class="info-label">PRS. *</div>
+              <div class="info-value">he/him</div>
             </div>
           </div>
         </div>
 
         <div class="signature-section">
-          <div class="signature">C3WK0</div>
+          <div class="signature">CEWKO</div>
           <div class="signature-line"></div>
         </div>
       </div>
@@ -286,10 +285,8 @@
     <div class="widget-title">C3VK0-X9N4D-Q8GKV</div>
   </div>
 </div>
-{% endcache %}
 
 <!-- About Widget -->
-{% cache 3600 about_widget %}
 <div class="widget about-widget">
   <div class="widget-container">
     <div class="widget-title">
@@ -305,7 +302,6 @@
     </div>
   </div>
 </div>
-{% endcache %}
 
 <!-- Recent Widgets Row -->
 <div class="recent-widgets-row">
@@ -403,7 +399,6 @@
         </div>
         {% endcache %}
         
-        {% cache 3600 craft_widget %}
         <!-- Craft Widget -->
         <div class="widget">
             <div class="widget-container">
@@ -457,7 +452,6 @@
                 </div>
             </div>
         </div>
-        {% endcache %}
         
         <!-- Stats Row: WakaTime + Visitors -->
         <div class="stats-row">
