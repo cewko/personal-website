@@ -40,7 +40,7 @@ Keeping the frontend simple was intentional. No build tools, no complexity. Just
 
 ## Future
 
-The WebSocket connection doesn't handle reconnection gracefully. If the connection drops, users have to refresh the page. Adding automatic reconnection would improve user experience.
+~~The WebSocket connection doesn't handle reconnection gracefully. If the connection drops, users have to refresh the page. Adding automatic reconnection would improve user experience.~~
 
 Error handling for API failures could be better. For now, if an integration fails, it just shows placeholder data.
 
