@@ -331,11 +331,9 @@
       authorSpan.className = "message-author";
       
       let authorText = data.nickname;
-      if (data.is_highlighted) {
-        authorText += " [ ! ]";
-      }
+
       if (data.from_discord) {
-        authorText += " [ Discord ]";
+        authorText += " [dc]";
       }
       authorText += " : ";
       authorSpan.textContent = authorText;
