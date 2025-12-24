@@ -49,6 +49,12 @@ CHANNEL_LAYERS = {
 # Celery Configuration
 CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = config("REDIS_URL", default="redis://localhost:6379/0")
+
+# Add SSL configuration for Redis
+if CELERY_BROKER_URL.startswith('rediss://'):
+    CELERY_BROKER_USE_SSL = {'ssl_cert_reqs': 'none'}
+    CELERY_REDIS_BACKEND_USE_SSL = {'ssl_cert_reqs': 'none'}
+
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
@@ -58,11 +64,11 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_RESULT_EXPIRES = 3600
 
 # Connection pool settings for Celery
-CELERY_BROKER_POOL_LIMIT = 3    # limit broker connections
+CELERY_BROKER_POOL_LIMIT = 3
 CELERY_BROKER_CONNECTION_RETRY = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BROKER_CONNECTION_MAX_RETRIES = 10
-CELERY_REDIS_MAX_CONNECTIONS = 3    # limit Redis connections
+CELERY_REDIS_MAX_CONNECTIONS = 3
 
 
 # Static files
