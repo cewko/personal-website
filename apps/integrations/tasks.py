@@ -18,7 +18,8 @@ logger = logging.getLogger(__name__)
     bind=True,
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 3, "countdown": 5},
-    retry_backoff=True
+    retry_backoff=True,
+    retry_jitter=True
 )
 def refresh_discord_status(self):
     try:
@@ -26,7 +27,11 @@ def refresh_discord_status(self):
         data = service.fetch_data()
         if data is not None:
             cache_key = service.get_cache_key()
+            fallback_key = service.get_fallback_cache_key()
+            
             cache.set(cache_key, data, service.cache_timeout)
+            cache.set(fallback_key, data, service.fallback_cache_timeout)
+            
             logger.info(f"Discord status refreshed: {data['status']}")
             return {"status": "success", "data": data}
         logger.warning("Discord status fetch returned None")
@@ -40,7 +45,8 @@ def refresh_discord_status(self):
     bind=True,
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 3, "countdown": 5},
-    retry_backoff=True
+    retry_backoff=True,
+    retry_jitter=True
 )
 def refresh_lastfm_track(self):
     try:
@@ -48,7 +54,11 @@ def refresh_lastfm_track(self):
         data = service.fetch_data()
         if data is not None:
             cache_key = service.get_cache_key()
+            fallback_key = service.get_fallback_cache_key()
+            
             cache.set(cache_key, data, service.cache_timeout)
+            cache.set(fallback_key, data, service.fallback_cache_timeout)
+            
             logger.info(f"Last.fm track refreshed: {data['artist']} - {data['name']}")
             return {"status": "success", "data": data}
         logger.warning("Last.fm track fetch returned None")
@@ -62,7 +72,8 @@ def refresh_lastfm_track(self):
     bind=True,
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 3, "countdown": 5},
-    retry_backoff=True
+    retry_backoff=True,
+    retry_jitter=True
 )
 def refresh_weather_data(self):
     try:
@@ -70,7 +81,11 @@ def refresh_weather_data(self):
         data = service.fetch_data()
         if data is not None:
             cache_key = service.get_cache_key()
+            fallback_key = service.get_fallback_cache_key()
+            
             cache.set(cache_key, data, service.cache_timeout)
+            cache.set(fallback_key, data, service.fallback_cache_timeout)
+            
             logger.info(f"Weather data refreshed: {data['temperature']}°C, {data['description']}")
             return {"status": "success", "data": data}
         logger.warning("Weather data fetch returned None")
@@ -84,7 +99,8 @@ def refresh_weather_data(self):
     bind=True,
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 3, "countdown": 5},
-    retry_backoff=True
+    retry_backoff=True,
+    retry_jitter=True
 )
 def refresh_wakatime_stats(self):
     try:
@@ -92,7 +108,11 @@ def refresh_wakatime_stats(self):
         data = service.fetch_data()
         if data is not None:
             cache_key = service.get_cache_key()
+            fallback_key = service.get_fallback_cache_key()
+            
             cache.set(cache_key, data, service.cache_timeout)
+            cache.set(fallback_key, data, service.fallback_cache_timeout)
+            
             logger.info(f"Wakatime stats refreshed: {data['total_hours']}h {data['total_minutes']}m")
             return {"status": "success", "data": data}
         logger.warning("Wakatime stats fetch returned None")
@@ -106,7 +126,8 @@ def refresh_wakatime_stats(self):
     bind=True,
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 3, "countdown": 5},
-    retry_backoff=True
+    retry_backoff=True,
+    retry_jitter=True
 )
 def refresh_mastodon_status(self):
     try:
@@ -114,7 +135,11 @@ def refresh_mastodon_status(self):
         data = service.fetch_data()
         if data is not None:
             cache_key = service.get_cache_key()
+            fallback_key = service.get_fallback_cache_key()
+            
             cache.set(cache_key, data, service.cache_timeout)
+            cache.set(fallback_key, data, service.fallback_cache_timeout)
+            
             logger.info(f"Mastodon status refreshed: {data['username']}")
             return {"status": "success", "data": data}
         logger.warning("Mastodon status fetch returned None")
@@ -128,7 +153,8 @@ def refresh_mastodon_status(self):
     bind=True,
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 3, "countdown": 5},
-    retry_backoff=True
+    retry_backoff=True,
+    retry_jitter=True
 )
 def refresh_github_contributions(self):
     try:
@@ -136,7 +162,11 @@ def refresh_github_contributions(self):
         data = service.fetch_data()
         if data is not None:
             cache_key = service.get_cache_key()
+            fallback_key = service.get_fallback_cache_key()
+            
             cache.set(cache_key, data, service.cache_timeout)
+            cache.set(fallback_key, data, service.fallback_cache_timeout)
+            
             logger.info(f"GitHub contributions refreshed: {data['total_contributions']} total")
             return {"status": "success", "data": data}
         logger.warning("GitHub contributions fetch returned None")
