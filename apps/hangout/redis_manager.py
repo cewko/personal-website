@@ -35,6 +35,11 @@ class RedisConnectionManager:
 
     def _setup_pools(self):
         redis_url = self._get_redis_url_with_ssl()
+
+        if redis_url.startswith('rediss://'):
+            separator = '&' if '?' in redis_url else '?'
+            redis_url = f"{redis_url}{separator}ssl_cert_reqs=none"
+        
         
         self._async_pool = redis_async.ConnectionPool.from_url(
             redis_url,
