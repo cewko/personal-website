@@ -163,8 +163,12 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             except Exception as e:
                 print(f"Error closing pubsub: {e}")
 
-        # let ttl handle disconnection
-        self.redis_client = None
+        if self.redis_client:
+            try:
+                await self.redis_client.aclose()
+            except Exception as err:
+                print(f"Error closing redis client: {err}")
+            self.redis_client = None
 
         await self.channel_layer.group_discard(
             self.room_group_name,
