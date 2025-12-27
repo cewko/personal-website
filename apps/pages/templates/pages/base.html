@@ -36,9 +36,6 @@
                 <a href="{% url 'pages:home' %}" class="widget-link">Home</a>
                 {% if current_page == "home" %}<span class="page-status">[~]</span>{% endif %}
               </div>
-              <div class="link-row">
-                <a href="{% url 'pages:about' %}" class="widget-link">About me</a>
-              </div>
 
               <div class="link-row">
                 <a href="{% url 'weblog:article_inventory' %}" class="widget-link">WebLog</a>
@@ -61,8 +58,12 @@
                 <span class="page-status">[dead]</span>
               </div>
               <a href="https://github.com/cewko" class="widget-link" target="_blank">Contributions</a>
-              <a href="https://mas.to/@cewko" class="widget-link" target="_blank">Fediverse</a>
-              <a href="https://twitter.com/cpvko" class="widget-link" target="_blank">X.com</a>
+              <div class="link-row">
+                <a href="https://mas.to/@cewko" class="widget-link" target="_blank">X.com</a>
+                {% comment %} {% discord_status_widget %} {% endcomment %}
+                <span class="page-status">[unused]</span>
+              </div>
+              <a href="https://bsky.app/profile/cewko.me" class="widget-link" target="_blank">Bluesky</a>
               <a href="https://ko-fi.com/cewko" class="widget-link" target="_blank">Support</a>
             </div>
           </div>
