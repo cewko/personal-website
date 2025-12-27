@@ -24,7 +24,6 @@ class OnlineUserTracker:
     
     async def get_online_count(self, redis_client):
         try:
-            await self.cleanup_expired_users(redis_client)
             count = await redis_client.scard(self.ONLINE_SET_KEY)
             return count
         except Exception as error:
