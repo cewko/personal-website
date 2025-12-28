@@ -126,17 +126,14 @@ class HangoutConsumer(AsyncWebsocketConsumer):
     async def _handle_discord_message(self, data):
         try:
             message_data = json.loads(data)
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "message_handler",
-                    "nickname": message_data['nickname'],
-                    "content": message_data['content'],
-                    "timestamp": message_data['timestamp'],
-                    "is_highlighted": message_data.get('is_highlighted', False),
-                    "from_discord": True
-                }
-            )
+            await self.send(text_data=json.dumps({
+                'type': 'message',
+                'nickname': message_data['nickname'],
+                'content': message_data['content'],
+                'timestamp': message_data['timestamp'],
+                'is_highlighted': message_data.get('is_highlighted', False),
+                'from_discord': True
+            }))
         except json.JSONDecodeError:
             print(f"Invalid JSON from Discord")
         except Exception as error:
