@@ -93,6 +93,7 @@ class HangoutDiscord:
     
     async def listen_for_web_messages(self):
         try:
+            self.redis_client = get_async_redis_client()
             self.redis_pubsub = self.redis_client.pubsub()
             await self.redis_pubsub.subscribe("web_to_discord")
             
@@ -117,6 +118,18 @@ class HangoutDiscord:
             raise
         except Exception as error:
             print(f"Error in web listener: {error}")
+        finally:
+            if self.redis_pubsub:
+                try:
+                    await self.redis_pubsub.unsubscribe("web_to_discord")
+                    await self.redis_pubsub.close()
+                except:
+                    pass
+            if self.redis_client:
+                try:
+                    await self.redis_client.aclose()
+                except:
+                    pass
     
     async def send_to_discord(self, nickname, content, is_highlighted=False):
         try:
