@@ -11,18 +11,66 @@ from .online_tracker import OnlineUserTracker
 from .redis_manager import get_async_redis_client
 
 
+class DiscordMessageBroadcaster:
+    _instance = None
+    _lock = asyncio.Lock()
+    
+    def __init__(self):
+        self.redis_client = None
+        self.pubsub = None
+        self.listener_task = None
+        self.subscribers = set()
+        
+    @classmethod
+    async def get_instance(cls):
+        if cls._instance is None:
+            async with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
+                    await cls._instance.start()
+        return cls._instance
+    
+    async def start(self):
+        if self.listener_task is None:
+            self.redis_client = get_async_redis_client()
+            self.pubsub = self.redis_client.pubsub()
+            await self.pubsub.subscribe("discord_to_web")
+            self.listener_task = asyncio.create_task(self._listen())
+            print("[Broadcaster] Shared pubsub listener started")
+    
+    async def _listen(self):
+        try:
+            async for message in self.pubsub.listen():
+                if message['type'] == 'message':
+                    for subscriber in list(self.subscribers):
+                        try:
+                            await subscriber(message['data'])
+                        except Exception as err:
+                            print(f"Error broadcasting to subscriber: {err}")
+
+        except asyncio.CancelledError:
+            print("[Broadcaster] Listener cancelled")
+
+        except Exception as err:
+            print(f"[Broadcaster] Error in listener: {err}")
+    
+    async def subscribe(self, callback):
+        self.subscribers.add(callback)
+    
+    async def unsubscribe(self, callback):
+        self.subscribers.discard(callback)
+
+
 class HangoutConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.room_group_name = "hangout_main"
-        self.redis_client = None
-        self.redis_pubsub = None
-        self.redis_listener_task = None
         self.heartbeat_task = None
         self.highlight_user_id = config("DISCORD_USER_ID", default="")
         self.online_tracker = OnlineUserTracker()
         self.user_id = None
         self.last_message_time = {}
+        self.broadcaster = None
 
         self.banned_words = config(
             "BANNED_NICKNAMES",
@@ -42,8 +90,6 @@ class HangoutConsumer(AsyncWebsocketConsumer):
 
     def _get_real_client_ip(self):
         headers = dict(self.scope.get('headers', []))
-        
-        # Get X-Forwarded-For header
         x_forwarded_for = headers.get(b'x-forwarded-for', b'').decode('utf-8')
         
         if x_forwarded_for:
@@ -63,14 +109,12 @@ class HangoutConsumer(AsyncWebsocketConsumer):
     def _is_bot(self):
         user_agent = self._get_user_agent()
         
-        # no user agent = likely a bot
         if not user_agent or len(user_agent) < 10:
             return True
 
         if not user_agent.startswith('mozilla/'):
             return True
         
-        # check for bot patterns in user agent
         if self.bot_pattern.search(user_agent):
             return True
         
@@ -79,11 +123,28 @@ class HangoutConsumer(AsyncWebsocketConsumer):
     def _should_count_as_online(self):
         return not self._is_bot()
 
+    async def _handle_discord_message(self, data):
+        try:
+            message_data = json.loads(data)
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "message_handler",
+                    "nickname": message_data['nickname'],
+                    "content": message_data['content'],
+                    "timestamp": message_data['timestamp'],
+                    "is_highlighted": message_data.get('is_highlighted', False),
+                    "from_discord": True
+                }
+            )
+        except json.JSONDecodeError:
+            print(f"Invalid JSON from Discord")
+        except Exception as error:
+            print(f"Error processing Discord message: {error}")
+
     async def connect(self):
-        # get real client IP (not heroku's internal router ip)
         self.user_id = self._get_real_client_ip()
         user_agent = self._get_user_agent()
-
         is_bot = self._is_bot()
 
         if is_bot:
@@ -98,12 +159,15 @@ class HangoutConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
 
-        self.redis_client = get_async_redis_client()
+        self.broadcaster = await DiscordMessageBroadcaster.get_instance()
+        await self.broadcaster.subscribe(self._handle_discord_message)
 
         if not is_bot:
-            await self.online_tracker.mark_user_online(self.user_id, self.redis_client)
-        
-        self.redis_listener_task = asyncio.create_task(self.listen_for_discord_messages())
+            redis_client = get_async_redis_client()
+            try:
+                await self.online_tracker.mark_user_online(self.user_id, redis_client)
+            finally:
+                await redis_client.aclose()
 
         if not is_bot:
             self.heartbeat_task = asyncio.create_task(self.online_heartbeat())
@@ -119,7 +183,11 @@ class HangoutConsumer(AsyncWebsocketConsumer):
                 "is_highlighted": str(message.get("discord_user_id", "")) == self.highlight_user_id
             }))
 
-        online_count = await self.online_tracker.get_online_count(self.redis_client)
+        redis_client = get_async_redis_client()
+        try:
+            online_count = await self.online_tracker.get_online_count(redis_client)
+        finally:
+            await redis_client.aclose()
         
         await self.send(text_data=json.dumps({
             "type": "online_count",
@@ -142,13 +210,6 @@ class HangoutConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         print(f"[Hangout] User disconnected: {self.user_id}")
         
-        if self.redis_listener_task:
-            self.redis_listener_task.cancel()
-            try:
-                await self.redis_listener_task
-            except asyncio.CancelledError:
-                pass
-        
         if self.heartbeat_task:
             self.heartbeat_task.cancel()
             try:
@@ -156,19 +217,8 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             except asyncio.CancelledError:
                 pass
         
-        if self.redis_pubsub:
-            try:
-                await self.redis_pubsub.unsubscribe("discord_to_web")
-                await self.redis_pubsub.close()
-            except Exception as e:
-                print(f"Error closing pubsub: {e}")
-
-        if self.redis_client:
-            try:
-                await self.redis_client.aclose()
-            except Exception as err:
-                print(f"Error closing redis client: {err}")
-            self.redis_client = None
+        if self.broadcaster:
+            await self.broadcaster.unsubscribe(self._handle_discord_message)
 
         await self.channel_layer.group_discard(
             self.room_group_name,
@@ -182,7 +232,11 @@ class HangoutConsumer(AsyncWebsocketConsumer):
 
             if message_type == "heartbeat":
                 if self._should_count_as_online():
-                    await self.online_tracker.heartbeat(self.user_id, self.redis_client)
+                    redis_client = get_async_redis_client()
+                    try:
+                        await self.online_tracker.heartbeat(self.user_id, redis_client)
+                    finally:
+                        await redis_client.aclose()
                 return
 
             if message_type == "message":
@@ -192,7 +246,6 @@ class HangoutConsumer(AsyncWebsocketConsumer):
                 if not content:
                     return
 
-                # cooldown
                 current_time = timezone.now().timestamp()
                 last_time = self.last_message_time.get(self.user_id, 0)
 
@@ -222,7 +275,6 @@ class HangoutConsumer(AsyncWebsocketConsumer):
                     }))
                     return
 
-                # Get real IP for message logging
                 ip_address = self._get_real_client_ip()
 
                 message = await self.save_message(
@@ -278,67 +330,37 @@ class HangoutConsumer(AsyncWebsocketConsumer):
         try:
             while True:
                 await asyncio.sleep(30)
-                if self.user_id and self.redis_client:
-                    await self.online_tracker.heartbeat(self.user_id, self.redis_client)
+                if self.user_id:
+                    redis_client = get_async_redis_client()
+                    try:
+                        await self.online_tracker.heartbeat(self.user_id, redis_client)
+                    finally:
+                        await redis_client.aclose()
         except asyncio.CancelledError:
             print(f"[Hangout] Heartbeat task cancelled for {self.user_id}")
         except Exception as error:
             print(f"Error in online heartbeat: {error}")
 
-    async def listen_for_discord_messages(self):
-        try:
-            self.redis_pubsub = self.redis_client.pubsub()
-            await self.redis_pubsub.subscribe("discord_to_web")
-            
-            async for message in self.redis_pubsub.listen():
-                if message['type'] == 'message':
-                    try:
-                        data = json.loads(message['data'])
-                        
-                        await self.channel_layer.group_send(
-                            self.room_group_name,
-                            {
-                                "type": "message_handler",
-                                "nickname": data['nickname'],
-                                "content": data['content'],
-                                "timestamp": data['timestamp'],
-                                "is_highlighted": data.get('is_highlighted', False),
-                                "from_discord": True
-                            }
-                        )
-                    except json.JSONDecodeError:
-                        print(f"Invalid JSON from Discord: {message['data']}")
-                    except Exception as error:
-                        print(f"Error processing Discord message: {error}")
-                        
-        except asyncio.CancelledError:
-            raise
-        except Exception as error:
-            print(f"Error in Discord listener: {error}")
-
     async def send_to_discord_via_redis(self, nickname, content, is_highlighted=False):
         try:
-            message_data = json.dumps({
-                'nickname': nickname,
-                'content': content,
-                'is_highlighted': is_highlighted,
-                'timestamp': timezone.now().isoformat()
-            })
-            
-            await self.redis_client.publish('web_to_discord', message_data)
-            print(f"Sent to Discord via Redis: {nickname}: {content}")
+            redis_client = get_async_redis_client()
+            try:
+                message_data = json.dumps({
+                    'nickname': nickname,
+                    'content': content,
+                    'is_highlighted': is_highlighted,
+                    'timestamp': timezone.now().isoformat()
+                })
+                
+                await redis_client.publish('web_to_discord', message_data)
+                print(f"Sent to Discord via Redis: {nickname}: {content}")
+            finally:
+                await redis_client.aclose()
         except Exception as error:
             print(f"Error sending to Discord via Redis: {error}")
 
     @database_sync_to_async
-    def save_message(
-        self, 
-        nickname, 
-        content, 
-        ip_address, 
-        discord_user_id=None, 
-        is_from_discord=False
-    ):
+    def save_message(self, nickname, content, ip_address, discord_user_id=None, is_from_discord=False):
         message = Message.objects.create(
             nickname=nickname,
             content=content,
