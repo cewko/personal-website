@@ -89,7 +89,7 @@ def refresh_wakatime_stats(self):
     retry_jitter=True
 )
 def refresh_bluesky_status(self):
-    return _refresh_integration_data(MastodonService, "Mastodon Status")
+    return _refresh_integration_data(BlueskyService, "Bluesky Status")
 
 
 @shared_task(
