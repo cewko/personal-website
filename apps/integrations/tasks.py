@@ -7,7 +7,7 @@ from .services import (
     LastFmService,
     WeatherService,
     WakatimeService,
-    MastodonService,
+    BlueskyService,
     GithubService
 )
 
@@ -88,7 +88,7 @@ def refresh_wakatime_stats(self):
     retry_backoff=True,
     retry_jitter=True
 )
-def refresh_mastodon_status(self):
+def refresh_bluesky_status(self):
     return _refresh_integration_data(MastodonService, "Mastodon Status")
 
 
