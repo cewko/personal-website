@@ -232,6 +232,40 @@
 .send-button:active {
   transform: translateY(2px);
 }
+
+/* Craft Widget */
+.craft-projects {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: -5px;
+}
+
+.project-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.project-link {
+  text-decoration: none;
+}
+
+.project-description {
+  font-family: "Ari-W9500 Display", monospace;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--color-primary);
+}
+
+.project-link:hover .project-description {
+  color: var(--color-secondary);
+}
+
+.project-tech {
+  color: var(--color-secondary) !important;
+}
+
 </style>
 {% endblock %} 
 
@@ -403,53 +437,36 @@
         <div class="widget">
             <div class="widget-container">
                 <div class="widget-drag-handle">
-                    <div class="widget-title">CRAFT</div>
+                  <div class="widget-title">
+                      <a href="https://github.com/cewko" class="widget-title-link" target="_blank">
+                          <span class="widget-title-text">CRAFT</span>
+                      </a>
+                  </div>
                 </div>
                 <div class="widget-bar"></div>
-                <div class="craft-projects">
-                    <div class="project-item">
-                        <a href="https://github.com/cewko/mcvc" class="project-link" target="_blank">
-                            <div class="project-name">
-                                <span class="project-arrow"></span>
-                                <span class="project-text">[ mc-vc ]</span>
-                            </div>
-                        </a>
-                        <div class="project-description">Windows application to enable voice communication for Minecraft using Faster-Whisper 
-                            <span class="project-tech">[ python : CTk ]</span></div>
-                    </div>
-                    <div class="project-item">
-                        <a href="https://github.com/cewko/color-picker" class="project-link" target="_blank">
-                            <div class="project-name">
-                                <span class="project-arrow"></span>
-                                <span class="project-text">[ color-picker ]</span>
-                            </div>
-                        </a>
-                        <div class="project-description">Select a color. copy to clipboard and get a desktop notification 
-                            <span class="project-tech">[ bash : gpick : xclip : libnotify ]</span></div>
-                    </div> 
-                    <div class="project-item">
-                        <a href="https://github.com/cewko/file-organizer" class="project-link" target="_blank">
-                            <div class="project-name">
-                                <span class="project-arrow"></span>
-                                <span class="project-text">[ file-organizer ]</span>
-                            </div>
-                        </a>
-                        <div class="project-description">Organize files by moving them into categorized folders based on their extensions
-                            <span class="project-tech">[ bash : coreutils ]</span></div>
-                    </div>                           
-                    {% comment %} <div class="project-more">
-                        more :
-                        <a href="https://github.com/cewko/sprout-lands" class="project-more-link" target="_blank">
-                            <span class="project-more-text">sprout-lands</span>
-                        </a><span class="project-tech">[ pygame ]</span> :
-                        <a href="https://github.com/cewko/pong" class="project-more-link" target="_blank">
-                            <span class="project-more-text">ping-pong <span class="project-tech"> [ love2d ]</span></span>
-                        </a> :
-                        <a href="https://github.com/cewko/video-summarizer" class="project-more-link" target="_blank">
-                            <span class="project-more-text">video-summarizer </span>
-                        </a><span class="project-tech">[ gemini : youtube-dlp : feedparser ]</span>
-                    </div> {% endcomment %}
-                </div>
+                  <div class="craft-projects">
+                      <div class="project-item">
+                          <a href="https://github.com/cewko/meep" class="project-link" target="_blank">
+                              <div class="project-description">Windows application to enable voice communication for Minecraft using Faster-Whisper 
+                                  <span class="project-tech">[ python : CTk ]</span>
+                              </div>
+                          </a>
+                      </div>
+                      <div class="project-item">
+                          <a href="https://github.com/cewko/color-picker" class="project-link" target="_blank">
+                              <div class="project-description">Select a color. copy to clipboard and get a desktop notification 
+                                  <span class="project-tech">[ bash : gpick : xclip : libnotify ]</span>
+                              </div>
+                          </a>
+                      </div> 
+                      <div class="project-item">
+                          <a href="https://github.com/cewko/file-organizer" class="project-link" target="_blank">
+                              <div class="project-description">Organize files by moving them into categorized folders based on their extensions
+                                  <span class="project-tech">[ bash : coreutils ]</span>
+                              </div>
+                          </a>
+                      </div>   
+                  </div>
             </div>
         </div>
         
