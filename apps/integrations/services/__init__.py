@@ -2,7 +2,7 @@ from .discord import DiscordService
 from .lastfm import LastFmService
 from .weather import WeatherService
 from .wakatime import WakatimeService
-from .mastodon import MastodonService
+from .bluesky import BlueskyService
 from .github import GithubService
 
 __all__ = [
@@ -10,6 +10,6 @@ __all__ = [
     "LastFmService", 
     "WeatherService", 
     "WakatimeService",
-    "MastodonService",
+    "BlueskyService",
     "GithubService"
 ]

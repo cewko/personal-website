@@ -4,7 +4,7 @@ from apps.integrations.services import (
     LastFmService, 
     WeatherService,
     WakatimeService,
-    MastodonService,
+    BlueskyService,
     GithubService
 )
 
@@ -62,9 +62,9 @@ def wakatime_widget():
     return {'stats': wakatime_data}
 
 
-@register.inclusion_tag("integrations/mastodon_widget.html")
-def mastodon_widget():
-    service = MastodonService()
+@register.inclusion_tag("integrations/bluesky_widget.html")
+def bluesky_widget():
+    service = BlueskyService()
     data = service.get_data()
 
     return {"status": data}

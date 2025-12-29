@@ -122,8 +122,8 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.integrations.tasks.refresh_wakatime_stats",
         "schedule": 3300.0,  # 55 minutes (cache: 1 hour)
     },
-    "refresh-mastodon-status": {
-        "task": "apps.integrations.tasks.refresh_mastodon_status",
+    "refresh-bluesky-status": {
+        "task": "apps.integrations.tasks.refresh_bluesky_status",
         "schedule": 1650.0,  # 27.5 minutes (cache: 30 min)
     },
     "refresh-github-contributions": {
