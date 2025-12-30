@@ -1,4 +1,5 @@
 import requests
+from datetime import datetime
 from .base import BaseIntegrationService
 
 
@@ -29,7 +30,12 @@ class WeatherService(BaseIntegrationService):
             data = response.json()
             current = data.get("current", {})
 
+            time_str = current['time']
+            dt = datetime.fromisoformat(time_str)
+            formatted_time = dt.strftime('%b. %-d, %-H:%M')
+
             return {
+                "time": formatted_time,
                 "temperature": round(current.get("temperature_2m", 0)),
                 "humidity": current.get("relative_humidity_2m", 0),
                 "description": self._get_weather_description(current.get("weather_code")),

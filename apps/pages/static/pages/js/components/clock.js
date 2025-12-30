@@ -8,7 +8,7 @@ function updateTime() {
     hour12: false,
   }).format(now);
 
-  const timeElement = document.querySelector(".weather-stats div:first-child");
+  const timeElement = document.querySelector(".weather-time");
   if (timeElement) {
     timeElement.textContent = `Time: ${polandTime}`;
   }
@@ -16,6 +16,5 @@ function updateTime() {
 
 function initClock() {
   updateTime();
-  
   setInterval(updateTime, 60000);
 }

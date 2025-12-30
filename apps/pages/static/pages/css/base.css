@@ -67,7 +67,7 @@ body::before {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
-  max-width: 67rem;
+  max-width: 64rem;
   width: 100%;
   align-items: start;
 }
