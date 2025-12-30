@@ -1,8 +1,6 @@
-<div class="weather-location">Poland | UTC+1</div>
 <div class="weather-stats">
   <div class="weather-time"></div>
-  <div>Temperature: {{ weather.temperature }}°C</div>
-  <div>Humidity: {{ weather.humidity }}%</div>
-  <div>{{ weather.description }}</div>
+  <div class="weather-stat" data-description="{{ weather.time }} • {{ weather.description }}">Temperature: {{ weather.temperature }}°C</div>
+  <div class="weather-stat" data-description="{{ weather.time }} • {{ weather.description }}">Humidity: {{ weather.humidity }}%</div>
 </div>
-
+<div class="weather-tooltip" id="weather-tooltip"></div>

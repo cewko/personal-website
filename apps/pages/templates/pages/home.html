@@ -266,6 +266,35 @@
   color: var(--color-secondary) !important;
 }
 
+.weather-widget {
+  flex: 1;
+  position: relative;
+}
+
+.weather-tooltip {
+  position: absolute;
+  background: var(--color-primary);
+  color: var(--color-background);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-family: "Ari-W9500 Display", monospace;
+  font-size: 12px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 100;
+  white-space: nowrap;
+}
+
+.weather-tooltip.show {
+  opacity: 1;
+}
+
+.weather-stat {
+  cursor: pointer;
+}
+
+
 </style>
 {% endblock %} 
 
@@ -279,30 +308,31 @@
     </div>
 
     <div class="main-section">
-      <div class="profile-image empty-frame"></div>
+      <div class="profile-image empty-frame">
+      </div>
 
       <div class="info-section">
         <div class="info-rows">
           <div class="info-group">
             <div class="info-row">
-              <div class="info-label">DOB. *</div>
+              <div class="info-label">DOB.</div>
               <div class="info-value">Dec. 11</div>
             </div>
             <div class="info-row">
-              <div class="info-label">SEX. *</div>
+              <div class="info-label">SEX.</div>
               <div class="info-value">Male</div>
             </div>
             <div class="info-row">
-              <div class="info-label">ISS. *</div>
-              <div class="info-value">Україна</div>
+              <div class="info-label">ISS.</div>
+              <div class="info-value">Poland</div>
             </div>
             <div class="info-row">
-              <div class="info-label">JOB. *</div>
+              <div class="info-label">JOB.</div>
               <div class="info-value">Open for work</div>
             </div>
             <div class="info-row">
-              <div class="info-label">PRS. *</div>
-              <div class="info-value">he/him</div>
+              <div class="info-label">PRS.</div>
+              <div class="info-value">He/him</div>
             </div>
           </div>
         </div>
@@ -321,7 +351,7 @@
 </div>
 
 <!-- About Widget -->
-<div class="widget about-widget">
+{% comment %} <div class="widget about-widget">
   <div class="widget-container">
     <div class="widget-title">
       <a href="{% url 'pages:about' %}" class="widget-title-link">
@@ -329,13 +359,11 @@
       </a>
     </div>
     <div class="widget-bar"></div>
-    <div class="about-text">
-      hello! name`s cewko. currently getting software engineering degree while 
-      learning web development and music production on side<br>...other hobbies? 
-      competitive minecraft &amp; diverse literature
-    </div>
+      <div class="about-text">
+        ...
+      </div>
   </div>
-</div>
+</div> {% endcomment %}
 
 <!-- Recent Widgets Row -->
 <div class="recent-widgets-row">
@@ -344,7 +372,7 @@
     <div class="widget-container">
       <div class="widget-title">
         <a href="https://bsky.app/profile/cewko.me" class="widget-title-link" target="_blank">
-          <span class="widget-title-text">CURRENT STATUS</span>
+          <span class="widget-title-text">SHOWER THOUGHT</span>
         </a>
       </div>
       <div class="widget-bar"></div>
@@ -447,14 +475,14 @@
                   <div class="craft-projects">
                       <div class="project-item">
                           <a href="https://github.com/cewko/meep" class="project-link" target="_blank">
-                              <div class="project-description">Windows application to enable voice communication for Minecraft using Faster-Whisper 
+                              <div class="project-description">Enable voice communication for Minecraft using Faster-Whisper 
                                   <span class="project-tech">[ python : CTk ]</span>
                               </div>
                           </a>
                       </div>
                       <div class="project-item">
                           <a href="https://github.com/cewko/color-picker" class="project-link" target="_blank">
-                              <div class="project-description">Select a color. copy to clipboard and get a desktop notification 
+                              <div class="project-description">Select color. copy to clipboard and get desktop notification 
                                   <span class="project-tech">[ bash : gpick : xclip : libnotify ]</span>
                               </div>
                           </a>
@@ -462,7 +490,7 @@
                       <div class="project-item">
                           <a href="https://github.com/cewko/file-organizer" class="project-link" target="_blank">
                               <div class="project-description">Organize files by moving them into categorized folders based on their extensions
-                                  <span class="project-tech">[ bash : coreutils ]</span>
+                                  <span class="project-tech">[ bash ]</span>
                               </div>
                           </a>
                       </div>   
@@ -470,7 +498,7 @@
             </div>
         </div>
         
-        <!-- Stats Row: WakaTime + Visitors -->
+        {% comment %} <!-- Stats Row: WakaTime + Visitors -->
         <div class="stats-row">
             <!-- WakaTime Widget -->
             <div class="widget">
@@ -497,7 +525,7 @@
                     {% visitors_widget %}
                 </div>
             </div>
-        </div>
+        </div> {% endcomment %}
     </div>
 </div>
 {% endblock %}
@@ -508,10 +536,66 @@
 <script src="{% static 'pages/js/components/dragDrop.js' %}"></script>
 
 <script>
+(function() {
+  const weatherStats = document.querySelectorAll('.weather-stat');
+  const tooltip = document.getElementById('weather-tooltip');
+  
+  if (!tooltip) return;
+  
+  weatherStats.forEach(stat => {
+    stat.addEventListener('mouseenter', (e) => {
+      const description = stat.getAttribute('data-description');
+      tooltip.textContent = description;
+      tooltip.classList.add('show');
+      
+      const rect = stat.getBoundingClientRect();
+      const container = stat.closest('.weather-widget');
+      const containerRect = container.getBoundingClientRect();
+      
+      tooltip.style.left = (rect.left - containerRect.left + rect.width / 2) + 'px';
+      tooltip.style.top = (rect.top - containerRect.top - 35) + 'px';
+      tooltip.style.transform = 'translateX(-50%)';
+    });
+    
+    stat.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('show');
+    });
+  });
+})();
+</script>
+
+<script>
 document.addEventListener('DOMContentLoaded', () => {
   initRecentTooltips();
   initClock();
   initDragAndDrop();
 });
+</script>
+<script>
+function matchProfileHeight() {
+  const profile = document.querySelector('.profile-widget');
+  const rightColumn = document.querySelector('.right-column');
+  
+  if (!profile || !rightColumn) return;
+  
+  const widgets = Array.from(rightColumn.querySelectorAll('.widget'));
+  const weatherWidget = document.querySelector('.weather-widget');
+  const weatherIndex = widgets.indexOf(weatherWidget);
+  
+  const topWidgets = widgets.slice(0, weatherIndex);
+  
+  let totalHeight = 0;
+  topWidgets.forEach((widget, index) => {
+    totalHeight += widget.offsetHeight;
+    if (index < topWidgets.length - 1) {
+      totalHeight += 10;
+    }
+  });
+  
+  profile.style.height = totalHeight + 'px'
+}
+
+window.addEventListener('load', matchProfileHeight);
+window.addEventListener('resize', matchProfileHeight);
 </script>
 {% endblock %}
