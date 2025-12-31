@@ -6,6 +6,7 @@ from .base import BaseIntegrationService
 
 class LastFmService(BaseIntegrationService):
     cache_timeout = 60
+    task_name = "apps.integrations.tasks.refresh_lastfm_track"
 
     def __init__(self):
         self.api_key = config("LASTFM_API_KEY", default="")

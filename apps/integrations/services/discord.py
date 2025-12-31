@@ -5,6 +5,7 @@ from .base import BaseIntegrationService
 
 class DiscordService(BaseIntegrationService):
     cache_timeout = 300
+    task_name = "apps.integrations.tasks.refresh_discord_status"
 
     def __init__(self):
         self.user_id = config("DISCORD_USER_ID", default="")

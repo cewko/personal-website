@@ -1,10 +1,10 @@
 import requests
-from datetime import datetime
 from .base import BaseIntegrationService
 
 
 class WeatherService(BaseIntegrationService):
     cache_timeout = 10800
+    task_name = "apps.integrations.tasks.refresh_weather_data"
 
     def __init__(self):
         # Warsaw coordinates

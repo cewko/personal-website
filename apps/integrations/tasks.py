@@ -17,15 +17,9 @@ logger = logging.getLogger(__name__)
 def _refresh_integration_data(service_class, service_name):
     try:
         service = service_class()
-        data = service.fetch_data()
+        data = service.fetch_and_cache()
 
         if data is not None:
-            cache_key = service.get_cache_key()
-            fallback_key = service.get_fallback_cache_key()
-
-            cache.set(cache_key, data, service.cache_timeout)
-            cache.set(fallback_key, data, service.fallback_cache_timeout)
-
             logger.info(f"{service_name} refreshed successfully")
             return {"status": "success", "data": data}
         
