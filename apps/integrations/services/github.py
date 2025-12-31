@@ -6,6 +6,7 @@ from .base import BaseIntegrationService
 
 class GithubService(BaseIntegrationService):
     cache_timeout = 7200
+    task_name = "apps.integrations.tasks.refresh_github_contributions"
 
     def __init__(self):
         self.username = config("GITHUB_USERNAME", default="")

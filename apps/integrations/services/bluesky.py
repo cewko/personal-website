@@ -9,6 +9,7 @@ from .base import BaseIntegrationService
 
 class BlueskyService(BaseIntegrationService):
     cache_timeout = 1800
+    task_name = "apps.integrations.tasks.refresh_bluesky_status"
 
     def __init__(self):
         self.handle = config("BLUESKY_HANDLE", default="")

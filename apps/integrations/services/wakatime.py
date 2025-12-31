@@ -5,6 +5,7 @@ from .base import BaseIntegrationService
 
 class WakatimeService(BaseIntegrationService):
     cache_timeout = 3600
+    task_name = "apps.integrations.tasks.refresh_wakatime_stats"
     
     def __init__(self):
         self.api_key = config('WAKATIME_API_KEY', default='')
