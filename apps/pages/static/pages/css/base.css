@@ -227,12 +227,12 @@ body::before {
   body::before {
     background-attachment: scroll;
     width: 100vw;
-    min-width: 70rem; /* Adjusted from 74rem */
+    min-width: 64rem;
   }
 
   .main-container {
     margin: 2rem;
-    min-width: 67rem; /* Adjusted from 70rem */
+    max-width: 64rem;
     transform-origin: top left;
   }
 }
@@ -248,13 +248,13 @@ body::before {
   body::before {
     background-attachment: scroll;
     width: 100vw;
-    min-width: 70rem; /* Adjusted from 74rem */
+    min-width: 64rem;
   }
 
   .main-container {
     margin: 1rem;
-    min-width: 67rem; /* Adjusted from 70rem */
-    width: 67rem; /* Adjusted from 70rem */
+    min-width: 64rem;
+    max-width: 64rem;
     max-width: none;
   }
 
@@ -278,7 +278,7 @@ body::before {
   }
 
   body::before {
-    min-width: 70rem; /* Adjusted from 74rem */
+    min-width: 64rem;
   }
 }
 
