@@ -52,9 +52,18 @@ class LastFmService(BaseIntegrationService):
             track_name = track.get("name") or "Unknown Song"
 
             images = track.get("image", [])
-            cover_url = next(
-                (img.get("#text") for img in reversed(images) if img.get("#text")), None
-            )
+            
+            cover_url = None
+
+            for image in images:
+                if image.get("size") == "large" and image.get("#text"):
+                    cover_url = image.get("#text")
+                    break
+            
+            if not cover_url:
+                cover_url = next(
+                    (img.get("#text") for img in reversed(images) if img.get("#text")), None
+                )
 
             timestamp = None
             time_ago = None
