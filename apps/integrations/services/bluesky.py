@@ -102,12 +102,17 @@ class BlueskyService(BaseIntegrationService):
             rkey = uri_parts[-1]
             post_url = f"https://bsky.app/profile/{self.handle}/post/{rkey}"
 
+            avatar_url = profile_data.get("avatar", "")
+
+            if avatar_url and "cdn.bsky.app" in avatar_url:
+                avatar_url = avatar_url.replace("/avatar/", "/avatar_thumbnail/")
+
             return {
                 'content': content.strip(),
                 'url': post_url,
                 'created_at': self._format_time_ago(created_at),
                 'username': profile_data.get("displayName") or profile_data.get("handle"),
-                'avatar': profile_data.get("avatar", ""),
+                'avatar': avatar_url,
                 'handle': profile_data.get("handle"),
             }
 
