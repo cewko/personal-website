@@ -531,11 +531,11 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'pages/js/components/clock.js' %}"></script>
-<script src="{% static 'pages/js/components/tooltip.js' %}"></script>
-<script src="{% static 'pages/js/components/dragDrop.js' %}"></script>
+<script src="{% static 'pages/js/components/clock.js' %}" defer></script>
+<script src="{% static 'pages/js/components/tooltip.js' %}" defer></script>
+<script src="{% static 'pages/js/components/dragDrop.js' %}" defer></script>
 
-<script>
+<script defer>
 (function() {
   const weatherStats = document.querySelectorAll('.weather-stat');
   const tooltip = document.getElementById('weather-tooltip');
@@ -564,14 +564,15 @@
 })();
 </script>
 
-<script>
+<script defer>
 document.addEventListener('DOMContentLoaded', () => {
   initRecentTooltips();
   initClock();
   initDragAndDrop();
 });
 </script>
-<script>
+
+<script defer>
 function matchProfileHeight() {
   const profile = document.querySelector('.profile-widget');
   const rightColumn = document.querySelector('.right-column');
