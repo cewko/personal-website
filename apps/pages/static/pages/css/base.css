@@ -1,23 +1,26 @@
 /* font */
 @font-face {
   font-family: "Ari-W9500 Display";
-  src: url("../fonts/ari-w9500-display.ttf") format("truetype");
+  src: url("../fonts/ari-w9500-display.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Retro Pixel Thick";
-  src: url("../fonts/retro-pixel-thick.ttf") format("truetype");
+  src: url("../fonts/retro-pixel-thick.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Retro Pixel Arcade";
-  src: url("../fonts/retro-pixel-arcade.ttf") format("truetype");
+  src: url("../fonts/retro-pixel-arcade.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 /* color palette */
@@ -46,20 +49,27 @@ body {
   position: relative;
 }
 
-body::before {
-  content: "";
+.video-background {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url("https://64.media.tumblr.com/7a9e0547a4db9a50a90693425007d682/97d6e365e7697bc8-26/s1280x1920/4285046ff31808472c87b51179e43fe3c4c17c1a.gifv");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  filter: blur(5px);
   z-index: -1;
+  overflow: hidden;
+}
+
+.video-background video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translate(-50%, -50%);
+  filter: blur(5px);
+  object-fit: cover;
 }
 
 /* main container */
