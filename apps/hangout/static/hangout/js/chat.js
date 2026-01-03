@@ -1,0 +1,335 @@
+(function () {
+  'use strict';
+
+  // Audio context - lazy initialize
+  let audioContext = null;
+  let soundEnabled = true;
+  let hasInteracted = false;
+
+  const savedPref = localStorage.getItem("hangout-sound-enabled");
+  if (savedPref !== null) {
+    soundEnabled = savedPref === "true";
+  }
+
+  function playNotificationSound() {
+    if (!soundEnabled || !hasInteracted) return;
+
+    try {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1);
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.2);
+    } catch (e) {
+      console.error("Failed to play sound:", e);
+    }
+  }
+
+  document.addEventListener("click", () => {
+    hasInteracted = true;
+    if (audioContext && audioContext.state === "suspended") {
+      audioContext.resume();
+    }
+  }, { once: true });
+
+  const messagesContainer = document.getElementById("chat-messages");
+  const messageInput = document.getElementById("message-input");
+  const nicknameInput = document.getElementById("nickname-input");
+  const sendButton = document.getElementById("send-button");
+  const onlineCountElement = document.querySelector(".online-count");
+  const errorsContainer = document.getElementById("chat-errors");
+
+  class HangoutConnection {
+    constructor() {
+      this.ws = null;
+      this.reconnectAttempts = 0;
+      this.maxReconnectAttempts = 10;
+      this.reconnectDelay = 1000;
+      this.maxReconnectDelay = 30000;
+      this.reconnectTimeout = null;
+      this.heartbeatInterval = null;
+      this.isInitialLoad = true;
+      this.isIntentionallyClosed = false;
+      this.connectionTimeout = null;
+    }
+
+    connect() {
+      if (this.connectionTimeout) clearTimeout(this.connectionTimeout);
+
+      if (this.ws && (this.ws.readyState === WebSocket.CONNECTING || this.ws.readyState === WebSocket.OPEN)) {
+        return;
+      }
+
+      try {
+        const wsUrl = `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws/hangout/`;
+        this.ws = new WebSocket(wsUrl);
+
+        this.connectionTimeout = setTimeout(() => {
+          if (this.ws.readyState === WebSocket.CONNECTING) {
+            this.ws.close();
+            this.handleReconnect();
+          }
+        }, 10000);
+
+        this.ws.onopen = () => this.onOpen();
+        this.ws.onmessage = (e) => this.onMessage(e);
+        this.ws.onerror = () => {};
+        this.ws.onclose = (event) => this.onClose(event);
+
+      } catch (error) {
+        this.handleReconnect();
+      }
+    }
+
+    onOpen() {
+      if (this.connectionTimeout) {
+        clearTimeout(this.connectionTimeout);
+        this.connectionTimeout = null;
+      }
+
+      this.reconnectAttempts = 0;
+      this.reconnectDelay = 1000;
+      errorsContainer.innerHTML = "";
+      errorsContainer.style.display = "none";
+      this.startHeartbeat();
+      this.isInitialLoad = true;
+    }
+
+    onMessage(e) {
+      try {
+        const data = JSON.parse(e.data);
+
+        if (data.type === "message") {
+          displayMessage(data);
+        } else if (data.type === "system" && data.message === "connected to hangout") {
+          setTimeout(() => { this.isInitialLoad = false; }, 100);
+        } else if (data.type === "error") {
+          showError(data.message);
+        } else if (data.type === "online_count" && onlineCountElement) {
+          onlineCountElement.textContent = `(${data.count} online)`;
+        }
+      } catch (error) {}
+    }
+
+    onClose(event) {
+      if (this.connectionTimeout) {
+        clearTimeout(this.connectionTimeout);
+        this.connectionTimeout = null;
+      }
+
+      this.stopHeartbeat();
+
+      if (!this.isIntentionallyClosed) {
+        this.handleReconnect();
+      }
+    }
+
+    handleReconnect() {
+      if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
+
+      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        showError("Connection lost. Please refresh the page.");
+        return;
+      }
+
+      this.reconnectAttempts++;
+      const delay = Math.min(this.reconnectDelay * Math.pow(1.5, this.reconnectAttempts - 1), this.maxReconnectDelay);
+
+      showError(`Reconnecting... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+
+      this.reconnectTimeout = setTimeout(() => {
+        this.connect();
+      }, delay);
+    }
+
+    startHeartbeat() {
+      this.stopHeartbeat();
+      this.heartbeatInterval = setInterval(() => {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+          try {
+            this.ws.send(JSON.stringify({ type: "heartbeat" }));
+          } catch (error) {}
+        }
+      }, 25000);
+    }
+
+    stopHeartbeat() {
+      if (this.heartbeatInterval) {
+        clearInterval(this.heartbeatInterval);
+        this.heartbeatInterval = null;
+      }
+    }
+
+    send(data) {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        try {
+          this.ws.send(JSON.stringify(data));
+          return true;
+        } catch (error) {
+          return false;
+        }
+      }
+      return false;
+    }
+
+    close() {
+      this.isIntentionallyClosed = true;
+      if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
+      if (this.connectionTimeout) clearTimeout(this.connectionTimeout);
+      this.stopHeartbeat();
+      if (this.ws) this.ws.close();
+    }
+
+    isConnected() {
+      return this.ws && this.ws.readyState === WebSocket.OPEN;
+    }
+  }
+
+  const connection = new HangoutConnection();
+  connection.connect();
+
+  function formatTimestamp(isoString) {
+    const date = new Date(isoString);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+    const timeString = date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+
+    if (messageDate.getTime() === today.getTime()) {
+      return timeString;
+    } else if (messageDate.getTime() === yesterday.getTime()) {
+      return `Yesterday | ${timeString}`;
+    } else {
+      const day = String(date.getDate()).padStart(2, '0');
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = monthNames[date.getMonth()];
+      const year = date.getFullYear();
+      return `${day} ${month}. ${year} | ${timeString}`;
+    }
+  }
+
+  function displayMessage(data) {
+    const messageDiv = document.createElement("div");
+    messageDiv.className = "chat-message";
+
+    const timeDiv = document.createElement("div");
+    timeDiv.className = "message-time";
+    timeDiv.textContent = `[ ${formatTimestamp(data.timestamp)} ]`;
+
+    const contentDiv = document.createElement("div");
+    contentDiv.className = "message-content";
+
+    const authorSpan = document.createElement("div");
+    authorSpan.className = "message-author";
+    
+    let authorText = data.nickname;
+    if (data.from_discord) authorText += " [dc]";
+    authorText += " : ";
+    authorSpan.textContent = authorText;
+
+    const textDiv = document.createElement("div");
+    textDiv.className = "message-text";
+    textDiv.textContent = data.content;
+
+    contentDiv.appendChild(authorSpan);
+    contentDiv.appendChild(textDiv);
+    messageDiv.appendChild(timeDiv);
+    messageDiv.appendChild(contentDiv);
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    if (!connection.isInitialLoad) {
+      playNotificationSound();
+    }
+  }
+
+  function showError(message) {
+    const existingErrors = Array.from(errorsContainer.children);
+    const existingError = existingErrors.find(err => err.textContent === message);
+    if (existingError) return;
+
+    errorsContainer.innerHTML = "";
+
+    const errorDiv = document.createElement("div");
+    errorDiv.className = "chat-error-message";
+    errorDiv.textContent = message;
+    errorDiv.style.fontSize = "16px";
+    errorDiv.style.color = "var(--color-secondary)";
+
+    errorsContainer.style.display = "block";
+    errorsContainer.appendChild(errorDiv);
+
+    if (!message.toLowerCase().includes("reconnect")) {
+      setTimeout(() => {
+        errorDiv.remove();
+        if (errorsContainer.children.length === 0) {
+          errorsContainer.style.display = "none";
+        }
+      }, 3000);
+    }
+  }
+
+  function sendMessage() {
+    const content = messageInput.value.trim();
+    if (!content) return;
+
+    if (!connection.isConnected()) {
+      showError("Not connected. Hold on...");
+      return;
+    }
+
+    const nickname = nicknameInput.value.trim() || "anonymous";
+
+    if (connection.send({ type: "message", nickname, content })) {
+      messageInput.value = "";
+    } else {
+      showError("Failed to send message.");
+    }
+  }
+
+  sendButton.addEventListener("click", sendMessage);
+
+  messageInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && !connection.isConnected() && !connection.isIntentionallyClosed) {
+      connection.handleReconnect();
+    }
+  });
+
+  window.addEventListener("beforeunload", () => connection.close());
+
+  window.addEventListener("online", () => {
+    if (!connection.isConnected()) connection.handleReconnect();
+  });
+
+  window.addEventListener("offline", () => {
+    showError("Network connection lost");
+  });
+
+})();

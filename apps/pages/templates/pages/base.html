@@ -8,12 +8,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}cewko's home{% endblock %}</title>
 
-    <link rel="icon" type="image/x-icon" href="{% static 'pages/images/favicon.ico' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'pages/images/favicon-small.ico' %}">
 
-    <link rel="preload" href="{% static 'pages/fonts/ari-w9500-display.ttf' %}" as="font" type="font/ttf" crossorigin>
-    <link rel="preload" href="{% static 'pages/fonts/retro-pixel-thick.ttf' %}" as="font" type="font/ttf" crossorigin>
     <link rel="stylesheet" href="{% static 'pages/css/base.css' %}" />
-    <link rel="stylesheet" href="{% static 'pages/css/preloader.css' %}" />
+    <style>
+      .main-container {
+        opacity: 0;
+        animation: fadeIn 0.6s ease-out forwards;
+        animation-delay: 0.1s;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      .credits {
+        opacity: 0;
+        animation: fadeIn 0.6s ease-out forwards;
+        animation-delay: 0.1s;
+      }
+
+      .left-column > * {
+        opacity: 0;
+        animation: fadeIn 0.6s ease-out forwards;
+        animation-delay: 0.1s;
+      }
+
+      .right-column > * {
+        opacity: 0;
+        animation: fadeIn 0.6s ease-out forwards;
+        animation-delay: 0.1s;
+      }
+
+      .bottom-grid {
+        opacity: 0;
+        animation: fadeIn 0.6s ease-out forwards;
+        animation-delay: 0.1s;
+      }
+  </style>
 
     
     {% block extra_css %}{% endblock %}
@@ -21,6 +54,12 @@
     <script src="{% static 'pages/js/preloader.js' %}"></script>
   </head>
   <body>
+    <div class="video-background">
+      <video autoplay muted loop playsinline preload="none" id="bg-video" poster="{% static 'pages/images/bg-poster.jpg' %}">
+        <source src="{% static 'pages/videos/bg-optimized.webm' %}" type="video/webm">
+      </video>
+    </div>
+    
     <div class="main-container">
       <div class="left-column">{% block left_column %} {% endblock %}</div>
 
@@ -86,40 +125,40 @@
     </div>
     {% endblock %} 
 
-    <script>
-    function checkCreditsCollision() {
-      const credits = document.querySelector(".credits");
-      const mainContainer = document.querySelector(".main-container");
+    <script defer>
+      function checkCreditsCollision() {
+        const credits = document.querySelector(".credits");
+        const mainContainer = document.querySelector(".main-container");
 
-      if (!credits || !mainContainer) return;
+        if (!credits || !mainContainer) return;
 
-      const creditsRect = credits.getBoundingClientRect();
-      const containerRect = mainContainer.getBoundingClientRect();
+        const creditsRect = credits.getBoundingClientRect();
+        const containerRect = mainContainer.getBoundingClientRect();
 
-      const isColliding = !(
-        creditsRect.right < containerRect.left ||
-        creditsRect.left > containerRect.right ||
-        creditsRect.bottom < containerRect.top ||
-        creditsRect.top > containerRect.bottom
-      );
+        const isColliding = !(
+          creditsRect.right < containerRect.left ||
+          creditsRect.left > containerRect.right ||
+          creditsRect.bottom < containerRect.top ||
+          creditsRect.top > containerRect.bottom
+        );
 
-      if (isColliding) {
-        credits.style.setProperty('opacity', '0', 'important');
-        credits.style.pointerEvents = "none";
-      } else {
-        credits.style.setProperty('opacity', '1', 'important');
-        credits.style.pointerEvents = "auto";
+        if (isColliding) {
+          credits.style.setProperty('opacity', '0', 'important');
+          credits.style.pointerEvents = "none";
+        } else {
+          credits.style.setProperty('opacity', '1', 'important');
+          credits.style.pointerEvents = "auto";
+        }
       }
-    }
 
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        checkCreditsCollision();
-      }, 800);
-    });
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          checkCreditsCollision();
+        }, 800);
+      });
 
-    window.addEventListener("resize", checkCreditsCollision);
-    window.addEventListener("scroll", checkCreditsCollision);
+      window.addEventListener("resize", checkCreditsCollision);
+      window.addEventListener("scroll", checkCreditsCollision);
     </script>
 
     {% block extra_js %}
