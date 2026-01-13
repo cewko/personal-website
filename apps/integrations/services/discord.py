@@ -26,7 +26,7 @@ class DiscordService(BaseIntegrationService):
 
             if data.get("success") and "data" in data:
                 discord_data = data["data"]
-                status = discord_data.get("discord_status", "offline")
+                status = discord_data.get("discord_status", "non")
 
                 return {
                     "status": self._normalize_status(status),
@@ -40,6 +40,8 @@ class DiscordService(BaseIntegrationService):
 
     def _normalize_status(self, status):
         if status in ("online", "idle", "dnb"):
-            status = "online"
+            status = "on"
+        else:
+            status = "non"
 
         return status

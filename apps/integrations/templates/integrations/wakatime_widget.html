@@ -1,6 +1,6 @@
 <div class="wakatime-stats">
     <div class="stat-column">
-        <div class="stat-label">all-time (aug. `25)</div>
+        <div class="stat-label">since aug. `25</div>
         <div class="stat-value">
             : <span class="wakatime-number" data-hours="{{ stats.total_hours }}" data-minutes="{{ stats.total_minutes }}"></span>
         </div>
@@ -44,14 +44,14 @@
                 html += `<span class="wakatime-digit ${colorClass}">${digit}</span>`;
             }
             
-            html += ' <span class="wakatime-unit">hour </span>';
+            html += ' <span class="wakatime-unit">h </span>';
             
             const paddedMinutes = minutes.toString().padStart(2, "0");
             for (let digit of paddedMinutes) {
                 html += `<span class="wakatime-digit non-zero">${digit}</span>`;
             }
             
-            html += ' <span class="wakatime-unit">min</span>';
+            html += ' <span class="wakatime-unit">mins </span>';
             
             element.innerHTML = html;
         });
