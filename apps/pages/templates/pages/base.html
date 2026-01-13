@@ -75,10 +75,6 @@
                 <a href="{% url 'pages:home' %}" class="widget-link">Home</a>
                 {% if current_page == "home" %}<span class="page-status">[~]</span>{% endif %}
               </div>
-              {% comment %} <div class="link-row">
-                <a href="{% url 'pages:about' %}" class="widget-link">About me</a>
-              </div> {% endcomment %}
-
               <div class="link-row">
                 <a href="{% url 'weblog:article_inventory' %}" class="widget-link">WebLog</a>
                 {% if current_page == "weblog" %}<span class="page-status">[~]</span>{% endif %}
@@ -95,9 +91,8 @@
               <a href="https://t.me/cewkx" class="widget-link" target="_blank">Telegram</a>
               <a href="https://soundcloud.com/cewko" class="widget-link" target="_blank">Soundcloud</a>
               <div class="link-row">
-                <span class="widget-link" style="cursor: default;">Discord</span>
-                {% comment %} {% discord_status_widget %} {% endcomment %}
-                <span class="page-status">[down]</span>
+                <a href="https://discord.gg/wDYe5EjZnN" class="widget-link" target="_blank">Discord</a>
+                {% discord_status_widget %}
               </div>
               <a href="https://bsky.app/profile/cewko.me" class="widget-link" target="_blank">Bluesky</a>
               <a href="https://ko-fi.com/cewko" class="widget-link" target="_blank">Support</a> 
