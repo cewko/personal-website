@@ -1,7 +1,8 @@
 import re
 import ipaddress
 from django.core.cache import cache
-from .models import Visit
+from .tasks import record_visit_async
+
 
 class AnalyticsMiddleware:
     def __init__(self, get_response):
@@ -28,8 +29,8 @@ class AnalyticsMiddleware:
             if not self._is_blocked_ip(ip) and not self._is_bot(request):
                 cache_key = f"visit_{ip}"
                 if not cache.get(cache_key):
-                    Visit.objects.create(ip_address=ip)
                     cache.set(cache_key, True, 300)
+                    record_visit_async.delay(ip)
         
         return self.get_response(request)
     
