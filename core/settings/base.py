@@ -1,6 +1,5 @@
 from pathlib import Path
 from decouple import config, Csv
-from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -133,9 +132,5 @@ CELERY_BEAT_SCHEDULE = {
     "cleanup-stale-online-users": {
         "task": "apps.hangout.tasks.cleanup_stale_online_users",
         "schedule": 120.0,
-    },
-    "cleanup-old-messages": {
-        "task": "apps.hangout.tasks.cleanup_old_messages",
-        "schedule": crontab(day_of_month="29", hour="20", minute="58"),
     },
 }
