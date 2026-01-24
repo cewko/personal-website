@@ -29,7 +29,7 @@
 
 .profile-image {
   border: 5px solid var(--color-secondary);
-  width: 250px;
+  width: 230px;
   height: 315px;
   object-fit: cover;
   object-position: center;
@@ -81,7 +81,7 @@
   background: var(--color-secondary);
   color: var(--color-background);
   font-family: "Retro Pixel Arcade";
-  font-size: 1.4rem;
+  font-size: 20px;
   padding: 7px 10px;
   min-width: 6.5rem;
   line-height: 1;
@@ -90,7 +90,7 @@
 .info-value {
   color: var(--color-primary);
   font-family: "Ari-W9500 Display", sans-serif;
-  font-size: 1.5rem;
+  font-size: 20px;
   line-height: 1;
   letter-spacing: 1px;
 }
