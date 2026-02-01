@@ -2,6 +2,7 @@ import requests
 from decouple import config
 from datetime import datetime, timezone
 from .base import BaseIntegrationService
+from .utils import format_time_ago
 
 
 class LastFmService(BaseIntegrationService):
@@ -73,7 +74,7 @@ class LastFmService(BaseIntegrationService):
                 date_info = track.get("date", {})
                 if "uts" in date_info:
                     timestamp = int(date_info["uts"])
-                    time_ago = self._format_time_ago(timestamp)
+                    time_ago = format_time_ago(timestamp)
 
             track_url = track.get("url") or "#"
 
@@ -81,7 +82,6 @@ class LastFmService(BaseIntegrationService):
                 "artist": artist_name,
                 "name": track_name,
                 "cover_url": cover_url,
-                "timestamp": timestamp,
                 "time_ago": time_ago,
                 "url": track_url,
             }
@@ -90,35 +90,3 @@ class LastFmService(BaseIntegrationService):
             return None
         except (KeyError, ValueError, TypeError):
             return None
-
-
-    @staticmethod
-    def _format_time_ago(unix_timestamp):
-        now = datetime.now(timezone.utc)
-        track_time = datetime.fromtimestamp(unix_timestamp, timezone.utc)
-        
-        diff = now - track_time
-        
-        seconds = diff.total_seconds()
-        
-        if seconds < 60:
-            return "playing now"
-        
-        minutes = int(seconds / 60)
-        if minutes < 60:
-            return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
-        
-        hours = int(minutes / 60)
-        if hours < 24:
-            return f"{hours} hour{'s' if hours != 1 else ''} ago"
-        
-        days = int(hours / 24)
-        if days < 30:
-            return f"{days} day{'s' if days != 1 else ''} ago"
-        
-        months = int(days / 30)
-        if months < 12:
-            return f"{months} month{'s' if months != 1 else ''} ago"
-        
-        years = int(months / 12)
-        return f"{years} year{'s' if years != 1 else ''} ago"
