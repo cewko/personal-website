@@ -6,7 +6,7 @@ class Message(models.Model):
     nickname = models.CharField(max_length=50)
     content = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    ip_hash = models.CharField(max_length=32, null=True, blank=True)
     discord_user_id = models.CharField(max_length=32, null=True, blank=True)
     is_from_discord = models.BooleanField(default=False)
     
