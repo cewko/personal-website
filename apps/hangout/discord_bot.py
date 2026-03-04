@@ -170,7 +170,7 @@ class HangoutDiscord:
         message = Message.objects.create(
             nickname=nickname,
             content=content,
-            ip_address=None,
+            ip_hash=None,
             discord_user_id=discord_user_id,
             is_from_discord=is_from_discord
         )

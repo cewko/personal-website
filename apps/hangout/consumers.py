@@ -9,6 +9,7 @@ from decouple import config
 from .models import Message
 from .online_tracker import OnlineUserTracker
 from .redis_manager import get_async_redis_client
+from apps.analytics.utils import hash_ip
 
 
 class DiscordMessageBroadcaster:
@@ -140,14 +141,15 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             print(f"Error processing Discord message: {error}")
 
     async def connect(self):
-        self.user_id = self._get_real_client_ip()
+        raw_ip = self._get_real_client_ip()
+        self.user_id = hash_ip(raw_ip)
         user_agent = self._get_user_agent()
         is_bot = self._is_bot()
 
         if is_bot:
-            print(f"[Hangout] Bot detected: {self.user_id} | UA: {user_agent[:100]}")
+            print(f"[Hangout] Bot detected: {self.user_id[:8]}... | UA: {user_agent[:100]}")
         else:
-            print(f"[Hangout] Human connected: {self.user_id}")
+            print(f"[Hangout] Human connected: {self.user_id[:8]}...")
 
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -205,7 +207,7 @@ class HangoutConsumer(AsyncWebsocketConsumer):
         }))
 
     async def disconnect(self, close_code):
-        print(f"[Hangout] User disconnected: {self.user_id}")
+        print(f"[Hangout] User disconnected: {self.user_id[:8]}...")
         
         if self.heartbeat_task:
             self.heartbeat_task.cancel()
@@ -272,12 +274,10 @@ class HangoutConsumer(AsyncWebsocketConsumer):
                     }))
                     return
 
-                ip_address = self._get_real_client_ip()
-
                 message = await self.save_message(
                     nickname=nickname,
                     content=content,
-                    ip_address=ip_address,
+                    ip_hash=self.user_id,
                     is_from_discord=False
                 )
 
@@ -334,7 +334,7 @@ class HangoutConsumer(AsyncWebsocketConsumer):
                     finally:
                         await redis_client.aclose()
         except asyncio.CancelledError:
-            print(f"[Hangout] Heartbeat task cancelled for {self.user_id}")
+            print(f"[Hangout] Heartbeat task cancelled for {self.user_id[:8]}...")
         except Exception as error:
             print(f"Error in online heartbeat: {error}")
 
@@ -357,11 +357,11 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             print(f"Error sending to Discord via Redis: {error}")
 
     @database_sync_to_async
-    def save_message(self, nickname, content, ip_address, discord_user_id=None, is_from_discord=False):
+    def save_message(self, nickname, content, ip_hash, discord_user_id=None, is_from_discord=False):
         message = Message.objects.create(
             nickname=nickname,
             content=content,
-            ip_address=ip_address,
+            ip_hash=ip_hash,
             discord_user_id=discord_user_id,
             is_from_discord=is_from_discord
         )

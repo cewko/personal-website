@@ -3,5 +3,5 @@ from .models import Visit
 
 
 @shared_task
-def record_visit_async(ip_address):
-    Visit.objects.create(ip_address=ip_address)
+def record_visit_async(ip_hash):
+    Visit.objects.create(ip_hash=ip_hash)
