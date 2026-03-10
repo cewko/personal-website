@@ -70,8 +70,8 @@ class HangoutConsumer(AsyncWebsocketConsumer):
         self.highlight_user_id = config("DISCORD_USER_ID", default="")
         self.online_tracker = OnlineUserTracker()
         self.user_id = None
-        self.last_message_time = {}
         self.broadcaster = None
+        self._redis_client = None
 
         self.banned_words = config(
             "BANNED_NICKNAMES",
@@ -158,15 +158,13 @@ class HangoutConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
 
+        self._redis_client = get_async_redis_client()
+
         self.broadcaster = await DiscordMessageBroadcaster.get_instance()
         await self.broadcaster.subscribe(self._handle_discord_message)
 
         if not is_bot:
-            redis_client = get_async_redis_client()
-            try:
-                await self.online_tracker.mark_user_online(self.user_id, redis_client)
-            finally:
-                await redis_client.aclose()
+            await self.online_tracker.mark_user_online(self.user_id, self._redis_client)
 
         if not is_bot:
             self.heartbeat_task = asyncio.create_task(self.online_heartbeat())
@@ -182,11 +180,7 @@ class HangoutConsumer(AsyncWebsocketConsumer):
                 "is_highlighted": str(message.get("discord_user_id", "")) == self.highlight_user_id
             }))
 
-        redis_client = get_async_redis_client()
-        try:
-            online_count = await self.online_tracker.get_online_count(redis_client)
-        finally:
-            await redis_client.aclose()
+        online_count = await self.online_tracker.get_online_count(self._redis_client)
         
         await self.send(text_data=json.dumps({
             "type": "online_count",
@@ -224,18 +218,22 @@ class HangoutConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
+        if self._redis_client:
+            try:
+                await self._redis_client.aclose()
+            except Exception as e:
+                print(f"[Hangout] Error closing redis client: {e}")
+            finally:
+                self._redis_client = None
+
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
             message_type = data.get("type", "message")
 
             if message_type == "heartbeat":
-                if self._should_count_as_online():
-                    redis_client = get_async_redis_client()
-                    try:
-                        await self.online_tracker.heartbeat(self.user_id, redis_client)
-                    finally:
-                        await redis_client.aclose()
+                if self._should_count_as_online() and self._redis_client:
+                    await self.online_tracker.heartbeat(self.user_id, self._redis_client)
                 return
 
             if message_type == "message":
@@ -245,17 +243,14 @@ class HangoutConsumer(AsyncWebsocketConsumer):
                 if not content:
                     return
 
-                current_time = timezone.now().timestamp()
-                last_time = self.last_message_time.get(self.user_id, 0)
-
-                if current_time - last_time < 1:
+                rate_key = f"ratelimit:msg:{self.user_id}"
+                is_limited = await self._redis_client.set(rate_key, 1, nx=True, ex=3)
+                if not is_limited:
                     await self.send(text_data=json.dumps({
                         "type": "error",
                         "message": "You're typing too fast, slow down."
                     }))
                     return
-
-                self.last_message_time[self.user_id] = current_time
 
                 max_length = 280
                 if len(content) > max_length:
@@ -327,12 +322,8 @@ class HangoutConsumer(AsyncWebsocketConsumer):
         try:
             while True:
                 await asyncio.sleep(30)
-                if self.user_id:
-                    redis_client = get_async_redis_client()
-                    try:
-                        await self.online_tracker.heartbeat(self.user_id, redis_client)
-                    finally:
-                        await redis_client.aclose()
+                if self.user_id and self._redis_client:
+                    await self.online_tracker.heartbeat(self.user_id, self._redis_client)
         except asyncio.CancelledError:
             print(f"[Hangout] Heartbeat task cancelled for {self.user_id[:8]}...")
         except Exception as error:
@@ -340,19 +331,19 @@ class HangoutConsumer(AsyncWebsocketConsumer):
 
     async def send_to_discord_via_redis(self, nickname, content, is_highlighted=False):
         try:
-            redis_client = get_async_redis_client()
-            try:
-                message_data = json.dumps({
-                    'nickname': nickname,
-                    'content': content,
-                    'is_highlighted': is_highlighted,
-                    'timestamp': timezone.now().isoformat()
-                })
-                
-                await redis_client.publish('web_to_discord', message_data)
-                print(f"Sent to Discord via Redis: {nickname}: {content}")
-            finally:
-                await redis_client.aclose()
+            if not self._redis_client:
+                print("Redis client not available")
+                return
+
+            message_data = json.dumps({
+                'nickname': nickname,
+                'content': content,
+                'is_highlighted': is_highlighted,
+                'timestamp': timezone.now().isoformat()
+            })
+            
+            await self._redis_client.publish('web_to_discord', message_data)
+            print(f"Sent to Discord via Redis: {nickname}: {content}")
         except Exception as error:
             print(f"Error sending to Discord via Redis: {error}")
 

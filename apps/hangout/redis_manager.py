@@ -44,7 +44,7 @@ class RedisConnectionManager:
         self._async_pool = redis_async.ConnectionPool.from_url(
             redis_url,
             decode_responses=True,
-            max_connections=4,
+            max_connections=2,
             socket_keepalive=True,
             socket_connect_timeout=5,
             retry_on_timeout=True
@@ -53,7 +53,7 @@ class RedisConnectionManager:
         self._sync_pool = redis_sync.ConnectionPool.from_url(
             redis_url,
             decode_responses=True,
-            max_connections=3,
+            max_connections=1,
             socket_keepalive=True,
             socket_connect_timeout=5,
             retry_on_timeout=True
