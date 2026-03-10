@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models import Count
+from django.core.cache import cache
 
 
 class Visit(models.Model):
@@ -13,7 +15,15 @@ class Visit(models.Model):
     
     @classmethod
     def get_stats(cls):
-        return {
-            "total_visits": cls.objects.count(),
-            "unique_visitors": cls.objects.values("ip_hash").distinct().count(),
-        }
+        stats = cache.get("analytics:visitor_stats")
+
+        if stats:
+            return stats
+
+        res = cls.objects.aggregate(
+            total_visits=Count("id"),
+            unique_visitors=Count("ip_hash", distinct=True)
+        )
+
+        cache.set("nalytics:visitor_stats", res, 60)
+        return res

@@ -213,6 +213,18 @@ class HangoutConsumer(AsyncWebsocketConsumer):
         if self.broadcaster:
             await self.broadcaster.unsubscribe(self._handle_discord_message)
 
+        if self.user_id and self._should_count_as_online() and self._redis_client:
+            await self.online_tracker.mark_user_offline(self.user_id, self._redis_client)
+            online_count = await self.online_tracker.get_online_count(self._redis_client)
+
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "online_count_update",
+                    "count": online_count
+                }
+            )
+
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
